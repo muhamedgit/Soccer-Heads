@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bg3uwm5ubb54n"]
+
+[ext_resource type="Script" uid="uid://dl0rjj1sbdplv" path="res://scenes/stadium_background.gd" id="1_8oplg"]
+
+[node name="StadiumBackground" type="Node2D" unique_id=130339613]
+script = ExtResource("1_8oplg")
