@@ -14,7 +14,7 @@
 scale = Vector2(1.5, 1.5)
 
 [node name="Player1" type="CharacterBody2D" parent="." unique_id=1614461935]
-position = Vector2(201, 217)
+position = Vector2(222, 433)
 script = ExtResource("2_cpr0p")
 
 [node name="Sprite2D" type="Sprite2D" parent="Player1" unique_id=2090077016]
