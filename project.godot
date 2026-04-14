@@ -11,8 +11,14 @@ config_version=5
 [application]
 
 config/name="SoccerHeadz"
-config/features=PackedStringArray("4.6", "Mobile")
+run/main_scene="uid://bswec7weouqpa"
+config/features=PackedStringArray("4.6", "C#", "Mobile")
 config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=2304
+window/size/viewport_height=1536
 
 [dotnet]
 
