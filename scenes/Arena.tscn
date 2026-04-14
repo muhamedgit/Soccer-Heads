@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://c1uh584b8lft"]
+
+[ext_resource type="Texture2D" uid="uid://ctssjssnibv3u" path="res://Assets/Backgrounds/Stadium.png" id="1_2gd4f"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5ftpa"]
+size = Vector2(15.333334, 388)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rarb2"]
+size = Vector2(119.00903, 1130.8491)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u3rsd"]
+size = Vector2(104, 1128)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uch3s"]
+size = Vector2(2119, 189)
+
+[node name="Arena" type="Node2D" unique_id=2116208832]
+
+[node name="StadiumBackground" type="TextureRect" parent="." unique_id=335979531]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 1536.0
+offset_bottom = 1024.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("1_2gd4f")
+stretch_mode = 6
+
+[node name="Boundaries" type="StaticBody2D" parent="." unique_id=220960074]
+position = Vector2(1157, 1339)
+collision_layer = 12
+collision_mask = 3
+
+[node name="Gorund" type="CollisionShape2D" parent="Boundaries" unique_id=985634968]
+scale = Vector2(150, 1)
+shape = SubResource("RectangleShape2D_5ftpa")
+
+[node name="WallRight" type="CollisionShape2D" parent="Boundaries" unique_id=759430382]
+position = Vector2(1091.0891, -775.1656)
+scale = Vector2(1, 0.9999998)
+shape = SubResource("RectangleShape2D_rarb2")
+
+[node name="WallLeft" type="CollisionShape2D" parent="Boundaries" unique_id=2126972324]
+position = Vector2(-1106, -775)
+shape = SubResource("RectangleShape2D_u3rsd")
+
+[node name="Cealing" type="CollisionShape2D" parent="Boundaries" unique_id=1588596901]
+position = Vector2(-9, -1439)
+shape = SubResource("RectangleShape2D_uch3s")
