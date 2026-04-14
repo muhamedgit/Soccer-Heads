@@ -43,7 +43,9 @@
 		 bool onFloor = IsOnFloor();
 		 if (onFloor != _wasOnFloor)
 		 {
+#if DEBUG
 			 GD.Print($"{Name} OnFloor: {onFloor}");
+#endif
 			 _wasOnFloor = onFloor;
 		 }
 	 }
