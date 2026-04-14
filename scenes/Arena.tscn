@@ -28,24 +28,24 @@ scale = Vector2(1.5, 1.5)
 texture = ExtResource("1_2gd4f")
 stretch_mode = 6
 
-[node name="Bounderies" type="StaticBody2D" parent="." unique_id=220960074]
+[node name="Boundaries" type="StaticBody2D" parent="." unique_id=220960074]
 position = Vector2(1157, 1339)
 collision_layer = 12
 collision_mask = 3
 
-[node name="Gorund" type="CollisionShape2D" parent="Bounderies" unique_id=985634968]
+[node name="Gorund" type="CollisionShape2D" parent="Boundaries" unique_id=985634968]
 scale = Vector2(150, 1)
 shape = SubResource("RectangleShape2D_5ftpa")
 
-[node name="WallRight" type="CollisionShape2D" parent="Bounderies" unique_id=759430382]
+[node name="WallRight" type="CollisionShape2D" parent="Boundaries" unique_id=759430382]
 position = Vector2(1091.0891, -775.1656)
 scale = Vector2(1, 0.9999998)
 shape = SubResource("RectangleShape2D_rarb2")
 
-[node name="WallLeft" type="CollisionShape2D" parent="Bounderies" unique_id=2126972324]
+[node name="WallLeft" type="CollisionShape2D" parent="Boundaries" unique_id=2126972324]
 position = Vector2(-1106, -775)
 shape = SubResource("RectangleShape2D_u3rsd")
 
-[node name="Cealing" type="CollisionShape2D" parent="Bounderies" unique_id=1588596901]
+[node name="Cealing" type="CollisionShape2D" parent="Boundaries" unique_id=1588596901]
 position = Vector2(-9, -1439)
 shape = SubResource("RectangleShape2D_uch3s")
