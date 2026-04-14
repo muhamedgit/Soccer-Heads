@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://buxcwxaf02yvv"]
 
-[ext_resource type="PackedScene" uid="uid://bg3uwm5ubb54n" path="res://scenes/StadiumBackground.tscn" id="1_ibkli"]
+[ext_resource type="PackedScene" uid="uid://c1uh584b8lft" path="res://scenes/Arena.tscn" id="1_cpr0p"]
 [ext_resource type="Script" uid="uid://dicmur4dagsry" path="res://scripts/movement/PlayerController.cs" id="2_cpr0p"]
 [ext_resource type="Texture2D" uid="uid://d4is5wxujerna" path="res://icon.svg" id="3_78awf"]
 
@@ -8,31 +8,33 @@
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cpr0p"]
 
-[node name="Node2D" type="Node2D" unique_id=72174549]
+[node name="MainGameScene" type="Node2D" unique_id=72174549]
 
-[node name="StadiumBackground" parent="." unique_id=130339613 instance=ExtResource("1_ibkli")]
-scale = Vector2(1.5, 1.5)
+[node name="Arena" parent="." unique_id=2116208832 instance=ExtResource("1_cpr0p")]
 
 [node name="Player1" type="CharacterBody2D" parent="." unique_id=1614461935]
-position = Vector2(222, 433)
+position = Vector2(149, 1016)
+collision_mask = 13
 script = ExtResource("2_cpr0p")
 
 [node name="Sprite2D" type="Sprite2D" parent="Player1" unique_id=2090077016]
 texture = ExtResource("3_78awf")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Player1" unique_id=354522304]
+[node name="PlayerColisionArea" type="CollisionShape2D" parent="Player1" unique_id=354522304]
 scale = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_s0nni")
 
 [node name="Player2" type="CharacterBody2D" parent="." unique_id=2088789380]
-position = Vector2(972, 436)
+position = Vector2(1800, 993)
+collision_mask = 13
 script = ExtResource("2_cpr0p")
 LeftAction = "Player2_Left"
 RightAction = "Player2_Right"
+JumpAction = "Player2_Jump"
 
 [node name="Sprite2D" type="Sprite2D" parent="Player2" unique_id=2051332855]
 texture = ExtResource("3_78awf")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Player2" unique_id=1821566449]
+[node name="PlayerColisionArea" type="CollisionShape2D" parent="Player2" unique_id=1821566449]
 scale = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_cpr0p")
