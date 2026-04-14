@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://bswec7weouqpa"]
+
+[ext_resource type="Texture2D" uid="uid://ctssjssnibv3u" path="res://Assets/Backgrounds/Stadium.png" id="1_2gd4f"]
+
+[node name="Arena" type="Node2D" unique_id=2116208832]
+
+[node name="StadiumBackground" type="TextureRect" parent="." unique_id=335979531]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 1536.0
+offset_bottom = 1024.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("1_2gd4f")
+stretch_mode = 6
