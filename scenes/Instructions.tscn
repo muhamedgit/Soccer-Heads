@@ -25,7 +25,7 @@ grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 28
 
 [node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -34,10 +34,15 @@ text = "Instructions"
 horizontal_alignment = 1
 
 [node name="InstructionsText" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(900, 500)
+custom_minimum_size = Vector2(900, 520)
 layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = true
+fit_content = false
+scroll_active = true
+autowrap_mode = 3
+theme_override_font_sizes/normal_font_size = 24
+theme_override_font_sizes/bold_font_size = 28
 text = "[b]Controls[/b]
 
 Player 1:
@@ -60,7 +65,8 @@ The match ends when a player reaches the score limit or when the timer runs out.
 After each goal, players and the ball reset to their starting positions."
 
 [node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(260, 50)
+custom_minimum_size = Vector2(260, 56)
 layout_mode = 2
+size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 24
 text = "Back"
