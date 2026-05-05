@@ -2,14 +2,14 @@ using Godot;
 
 public partial class SceneManager : Node
 {
-	public const string MainMenuScene = "res://Scenes/MainMenu.tscn";
-	public const string InstructionsScene = "res://Scenes/Instructions.tscn";
-	public const string MatchScene = "res://Scenes/Match.tscn";
-	public const string EndScreenScene = "res://Scenes/EndScreen.tscn";
+	public const string MainMenuScene = "res://scenes/MainMenu.tscn";
+	public const string InstructionsScene = "res://scenes/Instructions.tscn";
+	public const string MatchScene = "res://scenes/Game.tscn";
+	public const string EndScreenScene = "res://scenes/EndScreen.tscn";
 
 	private bool _isChangingScene = false;
 
-	public void GoTo(string scenePath)
+	public async void GoTo(string scenePath)
 	{
 		if (_isChangingScene)
 			return;
@@ -22,7 +22,11 @@ public partial class SceneManager : Node
 		{
 			GD.PushError($"Failed to change scene to: {scenePath}. Error: {error}");
 			_isChangingScene = false;
+			return;
 		}
+
+		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+		_isChangingScene = false;
 	}
 
 	public void GoToMainMenu()
