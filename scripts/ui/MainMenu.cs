@@ -6,6 +6,8 @@ public partial class MainMenu : Control
 	private Button _instructionsButton;
 	private Button _quitButton;
 
+	private bool _isStartingMatch = false;
+
 	public override void _Ready()
 	{
 		GD.Print("MainMenu script loaded.");
@@ -21,6 +23,12 @@ public partial class MainMenu : Control
 
 	private void OnPlayPressed()
 	{
+		if (_isStartingMatch)
+			return;
+
+		_isStartingMatch = true;
+		_playButton.Disabled = true;
+
 		GD.Print("Play button pressed.");
 
 		GetNode<GameState>("/root/GameState").ResetMatch();

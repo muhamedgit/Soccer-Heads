@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://dicmur4dagsry" path="res://scripts/movement/PlayerController.cs" id="2_cpr0p"]
 [ext_resource type="Texture2D" uid="uid://d4is5wxujerna" path="res://icon.svg" id="3_78awf"]
 [ext_resource type="Script" uid="uid://dmbk8fqevf7wa" path="res://scripts/ball/Ball.cs" id="4_ball01"]
+[ext_resource type="Script" path="res://scripts/core/MatchController.cs" id="5_matchcontroller"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_s0nni"]
 
@@ -17,6 +18,7 @@ bounce = 0.6
 radius = 32.0
 
 [node name="MainGameScene" type="Node2D" unique_id=72174549]
+script = ExtResource("5_matchcontroller")
 
 [node name="Arena" parent="." unique_id=2116208832 instance=ExtResource("1_cpr0p")]
 
