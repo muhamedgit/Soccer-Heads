@@ -1,7 +1,7 @@
-[gd_scene format=3 uid="uid://b8jptcglewb3m"]
+[gd_scene format=3 uid="uid://rtq50tn2yjrh"]
 
-[ext_resource type="PackedScene" uid="uid://dw7we3aafhmp5" path="res://ball.tscn" id="1_ig7tw"]
-[ext_resource type="Script" uid="uid://dmbk8fqevf7wa" path="res://Ball.cs" id="2_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://bakxy7coojl1r" path="res://ball.tscn" id="1_ig7tw"]
+[ext_resource type="Script" path="res://Ball.cs" id="2_0xm2m"]
 
 [node name="Main" type="Node2D" unique_id=602177382]
 

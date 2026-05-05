@@ -11,14 +11,23 @@ config_version=5
 [application]
 
 config/name="SoccerHeadz"
-run/main_scene="uid://buxcwxaf02yvv"
+run/main_scene="uid://dbnwu5mik65jv"
 config/features=PackedStringArray("4.6", "C#", "Mobile")
 config/icon="res://icon.svg"
+
+[autoload]
+
+SceneManager="*uid://ci375kjuxfaam"
+GameState="*uid://bk6hwbf726wr5"
 
 [display]
 
 window/size/viewport_width=2304
 window/size/viewport_height=1536
+window/size/window_width_override=1152
+window/size/window_height_override=768
+window/stretch/mode="canvas_items"
+window/mode/mode=0
 
 [dotnet]
 
