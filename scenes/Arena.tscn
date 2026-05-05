@@ -14,10 +14,6 @@ size = Vector2(104, 1128)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_uch3s"]
 size = Vector2(2119, 189)
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ground1"]
-friction = 0.3
-bounce = 0.0
-
 [node name="Arena" type="Node2D" unique_id=2116208832]
 
 [node name="StadiumBackground" type="TextureRect" parent="." unique_id=335979531]
@@ -36,7 +32,6 @@ stretch_mode = 6
 position = Vector2(1157, 1339)
 collision_layer = 12
 collision_mask = 3
-physics_material_override = SubResource("PhysicsMaterial_ground1")
 
 [node name="Gorund" type="CollisionShape2D" parent="Boundaries" unique_id=985634968]
 scale = Vector2(150, 1)
