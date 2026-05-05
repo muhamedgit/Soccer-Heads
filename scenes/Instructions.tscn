@@ -1,6 +1,9 @@
-[gd_scene format=3 uid="uid://instructions_screen"]
+[gd_scene load_steps=2 format=3 uid="uid://instructions_screen"]
+
+[ext_resource type="Script" path="res://scripts/ui/InstructionsMenu.cs" id="1_instructionsmenu"]
 
 [node name="Instructions" type="Control"]
+script = ExtResource("1_instructionsmenu")
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
