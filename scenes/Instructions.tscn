@@ -1,0 +1,72 @@
+[gd_scene load_steps=2 format=3 uid="uid://instructions_screen"]
+
+[ext_resource type="Script" path="res://scripts/ui/InstructionsMenu.cs" id="1_instructionsmenu"]
+
+[node name="Instructions" type="Control"]
+script = ExtResource("1_instructionsmenu")
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 80.0
+offset_top = 60.0
+offset_right = -80.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 28
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Instructions"
+horizontal_alignment = 1
+
+[node name="InstructionsText" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(900, 520)
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = false
+scroll_active = true
+autowrap_mode = 3
+theme_override_font_sizes/normal_font_size = 24
+theme_override_font_sizes/bold_font_size = 28
+text = "[b]Controls[/b]
+
+Player 1:
+Move left/right: A / D
+Jump: W
+Kick / interaction: Space
+
+Player 2:
+Move left/right: Left Arrow / Right Arrow
+Jump: Up Arrow
+Kick / interaction: Enter
+
+[b]Objective[/b]
+
+Hit the ball into the opponent's goal to score a point.
+
+[b]Match Rules[/b]
+
+The match ends when a player reaches the score limit or when the timer runs out.
+After each goal, players and the ball reset to their starting positions."
+
+[node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(260, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+text = "Back"

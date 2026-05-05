@@ -4,11 +4,7 @@
 [ext_resource type="Script" uid="uid://dicmur4dagsry" path="res://scripts/movement/PlayerController.cs" id="2_cpr0p"]
 [ext_resource type="Texture2D" uid="uid://d4is5wxujerna" path="res://icon.svg" id="3_78awf"]
 [ext_resource type="Script" uid="uid://dmbk8fqevf7wa" path="res://scripts/ball/Ball.cs" id="4_ball01"]
-[ext_resource type="Script" path="res://scripts/core/MatchController.cs" id="5_matchcontroller"]
-
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_s0nni"]
-
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cpr0p"]
+[ext_resource type="Script" uid="uid://d0rt74by6qofx" path="res://scripts/core/MatchController.cs" id="5_matchcontroller"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ball1"]
 friction = 0.1
@@ -16,6 +12,10 @@ bounce = 0.6
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ball1"]
 radius = 32.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_s0nni"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cpr0p"]
 
 [node name="MainGameScene" type="Node2D" unique_id=72174549]
 script = ExtResource("5_matchcontroller")
@@ -26,13 +26,13 @@ script = ExtResource("5_matchcontroller")
 position = Vector2(1152, 800)
 collision_layer = 2
 collision_mask = 13
-gravity_scale = 2.0
 mass = 0.5
 physics_material_override = SubResource("PhysicsMaterial_ball1")
-linear_damp = 0.5
-angular_damp = 1.0
+gravity_scale = 2.0
 lock_rotation = true
 continuous_cd = 2
+linear_damp = 0.5
+angular_damp = 1.0
 script = ExtResource("4_ball01")
 
 [node name="Sprite2D" type="Sprite2D" parent="Ball" unique_id=442957231]
