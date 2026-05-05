@@ -3,14 +3,41 @@
 [ext_resource type="PackedScene" uid="uid://c1uh584b8lft" path="res://scenes/Arena.tscn" id="1_cpr0p"]
 [ext_resource type="Script" uid="uid://dicmur4dagsry" path="res://scripts/movement/PlayerController.cs" id="2_cpr0p"]
 [ext_resource type="Texture2D" uid="uid://d4is5wxujerna" path="res://icon.svg" id="3_78awf"]
+[ext_resource type="Script" uid="uid://dmbk8fqevf7wa" path="res://scripts/ball/Ball.cs" id="4_ball01"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_s0nni"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cpr0p"]
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ball1"]
+friction = 0.05
+bounce = 0.7
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ball1"]
+radius = 32.0
+
 [node name="MainGameScene" type="Node2D" unique_id=72174549]
 
 [node name="Arena" parent="." unique_id=2116208832 instance=ExtResource("1_cpr0p")]
+
+[node name="Ball" type="RigidBody2D" parent="." unique_id=442957230]
+position = Vector2(1152, 800)
+collision_layer = 2
+collision_mask = 13
+gravity_scale = 2.0
+mass = 0.5
+physics_material_override = SubResource("PhysicsMaterial_ball1")
+linear_damp = 0.2
+angular_damp = 1.0
+lock_rotation = true
+continuous_cd = 2
+script = ExtResource("4_ball01")
+
+[node name="Sprite2D" type="Sprite2D" parent="Ball" unique_id=442957231]
+texture = ExtResource("3_78awf")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ball" unique_id=442957232]
+shape = SubResource("CircleShape2D_ball1")
 
 [node name="Player1" type="CharacterBody2D" parent="." unique_id=1614461935]
 position = Vector2(149, 1016)

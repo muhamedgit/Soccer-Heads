@@ -4,8 +4,10 @@ using System;
 public partial class PlayerController : CharacterBody2D
 {
 	[Export] public float Speed = 420f;
-	[Export] public float Gravity = 2200f;
-	[Export] public float JumpVelocity = -900f;
+	[Export] public float GravityUp = 2000f;
+	[Export] public float GravityDown = 3800f;
+	[Export] public float MaxFallSpeed = 1400f;
+	[Export] public float JumpVelocity = -950f;
 
 	[Export] public string LeftAction = "Player1_Left";
 	[Export] public string RightAction = "Player1_Right";
@@ -38,7 +40,11 @@ public partial class PlayerController : CharacterBody2D
 		v.X = Input.GetAxis(LeftAction, RightAction) * Speed;
 
 		if (!IsOnFloor())
-			v.Y += Gravity * (float)delta;
+		{
+			float g = v.Y < 0f ? GravityUp : GravityDown;
+			v.Y += g * (float)delta;
+			v.Y = Mathf.Min(v.Y, MaxFallSpeed);
+		}
 		else if (v.Y > 0f)
 			v.Y = 0f;
 
