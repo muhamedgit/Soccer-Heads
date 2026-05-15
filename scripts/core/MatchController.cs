@@ -6,6 +6,8 @@ public partial class MatchController : Node2D
 	private CharacterBody2D _playerTwo;
 	private RigidBody2D _ball;
 	private GameState _gameState;
+	private SceneManager _sceneManager;
+	private bool _matchEnded;
 
 	private Vector2 _playerOneStartPosition;
 	private Vector2 _playerTwoStartPosition;
@@ -19,6 +21,7 @@ public partial class MatchController : Node2D
 		_playerTwo = GetNode<CharacterBody2D>("Player2");
 		_ball = GetNode<RigidBody2D>("Ball");
 		_gameState = GetNode<GameState>("/root/GameState");
+		_sceneManager = GetNode<SceneManager>("/root/SceneManager");
 
 		_playerOneStartPosition = _playerOne.GlobalPosition;
 		_playerTwoStartPosition = _playerTwo.GlobalPosition;
@@ -29,10 +32,21 @@ public partial class MatchController : Node2D
 
 	public override void _PhysicsProcess(double delta)
 	{
-		if (_gameState.MatchTimeLeft <= 0f)
+		if (_matchEnded)
 			return;
 
 		_gameState.SetTimeLeft(_gameState.MatchTimeLeft - (float)delta);
+
+		if (_gameState.IsMatchOver())
+		{
+			EndMatch();
+		}
+	}
+
+	private void EndMatch()
+	{
+		_matchEnded = true;
+		_sceneManager.GoToEndScreen();
 	}
 
 	public void ResetMatchObjects()

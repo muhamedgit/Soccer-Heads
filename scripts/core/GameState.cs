@@ -48,4 +48,20 @@ public partial class GameState : Node
 			   PlayerTwoScore >= ScoreToWin ||
 			   MatchTimeLeft <= 0f;
 	}
+
+	public string GetFinalScoreText()
+	{
+		return $"{PlayerOneScore} - {PlayerTwoScore}";
+	}
+
+	public string GetWinnerText()
+	{
+		if (PlayerOneScore > PlayerTwoScore)
+			return "Player 1 Wins";
+
+		if (PlayerTwoScore > PlayerOneScore)
+			return "Player 2 Wins";
+
+		return "Draw";
+	}
 }
