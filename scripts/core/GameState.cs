@@ -2,6 +2,9 @@ using Godot;
 
 public partial class GameState : Node
 {
+	[Signal]
+	public delegate void ScoreChangedEventHandler(int playerOneScore, int playerTwoScore);
+
 	public int PlayerOneScore { get; private set; }
 	public int PlayerTwoScore { get; private set; }
 	public float MatchTimeLeft { get; private set; }
@@ -14,16 +17,19 @@ public partial class GameState : Node
 		PlayerOneScore = 0;
 		PlayerTwoScore = 0;
 		MatchTimeLeft = DefaultMatchDuration;
+		EmitSignal(SignalName.ScoreChanged, PlayerOneScore, PlayerTwoScore);
 	}
 
 	public void AddGoalForPlayerOne()
 	{
 		PlayerOneScore++;
+		EmitSignal(SignalName.ScoreChanged, PlayerOneScore, PlayerTwoScore);
 	}
 
 	public void AddGoalForPlayerTwo()
 	{
 		PlayerTwoScore++;
+		EmitSignal(SignalName.ScoreChanged, PlayerOneScore, PlayerTwoScore);
 	}
 
 	public void SetTimeLeft(float timeLeft)
