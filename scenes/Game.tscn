@@ -47,6 +47,24 @@ content_margin_top = 3.0
 content_margin_right = 12.0
 content_margin_bottom = 3.0
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_timer_panel"]
+bg_color = Color(0.0352941, 0.0470588, 0.0784314, 0.84)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.16)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.28)
+shadow_size = 8
+content_margin_left = 14.0
+content_margin_top = 4.0
+content_margin_right = 14.0
+content_margin_bottom = 4.0
+
 [node name="MainGameScene" type="Node2D" unique_id=72174549]
 script = ExtResource("5_matchcontroller")
 
@@ -104,7 +122,7 @@ script = ExtResource("6_scorehud")
 [node name="HudRoot" type="Control" parent="ScoreHud"]
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 112.0
+offset_bottom = 138.0
 grow_horizontal = 2
 mouse_filter = 2
 
@@ -182,3 +200,23 @@ theme_override_colors/font_color = Color(1, 0.52549, 0.482353, 1)
 theme_override_font_sizes/font_size = 11
 text = "PLAYER 2"
 horizontal_alignment = 1
+
+[node name="TimerPanel" type="PanelContainer" parent="ScoreHud/HudRoot"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -62.0
+offset_top = 92.0
+offset_right = 62.0
+offset_bottom = 128.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_timer_panel")
+
+[node name="TimerLabel" type="Label" parent="ScoreHud/HudRoot/TimerPanel"]
+custom_minimum_size = Vector2(96, 24)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.92)
+theme_override_font_sizes/font_size = 22
+text = "01:30"
+horizontal_alignment = 1
+vertical_alignment = 1
