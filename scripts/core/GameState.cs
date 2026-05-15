@@ -5,6 +5,9 @@ public partial class GameState : Node
 	[Signal]
 	public delegate void ScoreChangedEventHandler(int playerOneScore, int playerTwoScore);
 
+	[Signal]
+	public delegate void TimeChangedEventHandler(float secondsLeft);
+
 	public int PlayerOneScore { get; private set; }
 	public int PlayerTwoScore { get; private set; }
 	public float MatchTimeLeft { get; private set; }
@@ -18,6 +21,7 @@ public partial class GameState : Node
 		PlayerTwoScore = 0;
 		MatchTimeLeft = DefaultMatchDuration;
 		EmitSignal(SignalName.ScoreChanged, PlayerOneScore, PlayerTwoScore);
+		EmitSignal(SignalName.TimeChanged, MatchTimeLeft);
 	}
 
 	public void AddGoalForPlayerOne()
@@ -35,6 +39,7 @@ public partial class GameState : Node
 	public void SetTimeLeft(float timeLeft)
 	{
 		MatchTimeLeft = Mathf.Max(0f, timeLeft);
+		EmitSignal(SignalName.TimeChanged, MatchTimeLeft);
 	}
 
 	public bool IsMatchOver()
