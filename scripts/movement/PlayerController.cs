@@ -28,6 +28,8 @@ public partial class PlayerController : CharacterBody2D
 	[Export] public int PlaceholderHeight = 256;
 	[Export] public int OutlineThickness = 5;
 
+	public bool InputEnabled { get; set; } = true;
+
 	private bool _wasOnFloor;
 	private RigidBody2D _ballInContact;
 
@@ -43,7 +45,7 @@ public partial class PlayerController : CharacterBody2D
 	public override void _PhysicsProcess(double delta)
 	{
 		var v = Velocity;
-		v.X = Input.GetAxis(LeftAction, RightAction) * Speed;
+		v.X = InputEnabled ? Input.GetAxis(LeftAction, RightAction) * Speed : 0f;
 
 		if (!IsOnFloor())
 		{
@@ -56,7 +58,7 @@ public partial class PlayerController : CharacterBody2D
 			v.Y = 0f;
 		}
 
-		if (Input.IsActionJustPressed(JumpAction) && IsOnFloor())
+		if (InputEnabled && Input.IsActionJustPressed(JumpAction) && IsOnFloor())
 			v.Y = JumpVelocity;
 
 		Velocity = v;

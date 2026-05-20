@@ -3,15 +3,18 @@ using System;
 
 public partial class MatchController : Node2D
 {
-	private CharacterBody2D _playerOne;
-	private CharacterBody2D _playerTwo;
+	private PlayerController _playerOne;
+	private PlayerController _playerTwo;
 	private RigidBody2D _ball;
 	private GameState _gameState;
 	private SceneManager _sceneManager;
 	private bool _matchEnded;
+	private bool _isResetting;
 
 	private GoalTrigger _leftGoal;
 	private GoalTrigger _rightGoal;
+
+	[Export] public float GoalResetDelay = 0.7f;
 
 	private Vector2 _playerOneStartPosition;
 	private Vector2 _playerTwoStartPosition;
@@ -33,8 +36,8 @@ public partial class MatchController : Node2D
 	{
 		GD.Print("MatchController loaded.");
 
-		_playerOne = GetNode<CharacterBody2D>("Player1");
-		_playerTwo = GetNode<CharacterBody2D>("Player2");
+		_playerOne = GetNode<PlayerController>("Player1");
+		_playerTwo = GetNode<PlayerController>("Player2");
 		_ball = GetNode<RigidBody2D>("Ball");
 		_gameState = GetNode<GameState>("/root/GameState");
 		_sceneManager = GetNode<SceneManager>("/root/SceneManager");
@@ -64,9 +67,9 @@ public partial class MatchController : Node2D
 			GD.PushWarning("RightGoal node not found at Arena/Goals/RightGoal.");
 	}
 
-	private void OnGoalScored(int scoringPlayerIndex)
+	private async void OnGoalScored(int scoringPlayerIndex)
 	{
-		if (_matchEnded)
+		if (_matchEnded || _isResetting)
 			return;
 
 		if (scoringPlayerIndex == 0)
@@ -74,13 +77,26 @@ public partial class MatchController : Node2D
 		else
 			_gameState.AddGoalForPlayerTwo();
 
+		if (_gameState.IsMatchOver())
+		{
+			EndMatch();
+			return;
+		}
+
+		_isResetting = true;
+		SetPlayersInputEnabled(false);
 		ResetMatchObjects();
+
+		if (GoalResetDelay > 0f)
+			await ToSignal(GetTree().CreateTimer(GoalResetDelay), SceneTreeTimer.SignalName.Timeout);
+
+		if (!IsInstanceValid(this) || _matchEnded)
+			return;
 
 		_leftGoal?.ResetLock();
 		_rightGoal?.ResetLock();
-
-		if (_gameState.IsMatchOver())
-			EndMatch();
+		SetPlayersInputEnabled(true);
+		_isResetting = false;
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -96,6 +112,9 @@ public partial class MatchController : Node2D
 
 	private void EndMatch()
 	{
+		if (_matchEnded)
+			return;
+
 		_matchEnded = true;
 		_sceneManager.GoToEndScreen();
 	}
@@ -103,13 +122,25 @@ public partial class MatchController : Node2D
 	public void ResetMatchObjects()
 	{
 		_playerOne.GlobalPosition = _playerOneStartPosition;
+		_playerOne.Velocity = Vector2.Zero;
+
 		_playerTwo.GlobalPosition = _playerTwoStartPosition;
+		_playerTwo.Velocity = Vector2.Zero;
 
 		_ball.GlobalPosition = _ballStartPosition;
 		_ball.LinearVelocity = Vector2.Zero;
 		_ball.AngularVelocity = 0f;
 
 		GD.Print("Match objects reset.");
+	}
+
+	private void SetPlayersInputEnabled(bool enabled)
+	{
+		if (_playerOne != null)
+			_playerOne.InputEnabled = enabled;
+
+		if (_playerTwo != null)
+			_playerTwo.InputEnabled = enabled;
 	}
 
 	private void CreateGoalHighlights()
