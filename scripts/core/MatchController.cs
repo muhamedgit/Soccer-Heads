@@ -10,6 +10,9 @@ public partial class MatchController : Node2D
 	private SceneManager _sceneManager;
 	private bool _matchEnded;
 
+	private GoalTrigger _leftGoal;
+	private GoalTrigger _rightGoal;
+
 	private Vector2 _playerOneStartPosition;
 	private Vector2 _playerTwoStartPosition;
 	private Vector2 _ballStartPosition;
@@ -42,6 +45,42 @@ public partial class MatchController : Node2D
 
 		ResetMatchObjects();
 		CreateGoalHighlights();
+		ConnectGoalTriggers();
+	}
+
+	private void ConnectGoalTriggers()
+	{
+		_leftGoal = GetNodeOrNull<GoalTrigger>("Arena/Goals/LeftGoal");
+		_rightGoal = GetNodeOrNull<GoalTrigger>("Arena/Goals/RightGoal");
+
+		if (_leftGoal != null)
+			_leftGoal.GoalScored += OnGoalScored;
+		else
+			GD.PushWarning("LeftGoal node not found at Arena/Goals/LeftGoal.");
+
+		if (_rightGoal != null)
+			_rightGoal.GoalScored += OnGoalScored;
+		else
+			GD.PushWarning("RightGoal node not found at Arena/Goals/RightGoal.");
+	}
+
+	private void OnGoalScored(int scoringPlayerIndex)
+	{
+		if (_matchEnded)
+			return;
+
+		if (scoringPlayerIndex == 0)
+			_gameState.AddGoalForPlayerOne();
+		else
+			_gameState.AddGoalForPlayerTwo();
+
+		ResetMatchObjects();
+
+		_leftGoal?.ResetLock();
+		_rightGoal?.ResetLock();
+
+		if (_gameState.IsMatchOver())
+			EndMatch();
 	}
 
 	public override void _PhysicsProcess(double delta)

@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://c1uh584b8lft"]
 
 [ext_resource type="Texture2D" uid="uid://ctssjssnibv3u" path="res://Assets/Backgrounds/Stadium.png" id="1_2gd4f"]
+[ext_resource type="Script" path="res://scripts/core/GoalTrigger.cs" id="2_goaltrigger"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5ftpa"]
 size = Vector2(15.333334, 388)
@@ -21,6 +22,9 @@ bounce = 0.0
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_walls1"]
 friction = 0.05
 bounce = 0.5
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_goalshape"]
+size = Vector2(160, 320)
 
 [node name="Arena" type="Node2D" unique_id=2116208832]
 
@@ -64,3 +68,29 @@ shape = SubResource("RectangleShape2D_u3rsd")
 [node name="Cealing" type="CollisionShape2D" parent="Walls" unique_id=1588596901]
 position = Vector2(-9, -1439)
 shape = SubResource("RectangleShape2D_uch3s")
+
+[node name="Goals" type="Node2D" parent="."]
+
+[node name="LeftGoal" type="Area2D" parent="Goals"]
+position = Vector2(145, 955)
+collision_layer = 16
+collision_mask = 2
+monitoring = true
+monitorable = false
+script = ExtResource("2_goaltrigger")
+ScoringPlayerIndex = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goals/LeftGoal"]
+shape = SubResource("RectangleShape2D_goalshape")
+
+[node name="RightGoal" type="Area2D" parent="Goals"]
+position = Vector2(2160, 955)
+collision_layer = 16
+collision_mask = 2
+monitoring = true
+monitorable = false
+script = ExtResource("2_goaltrigger")
+ScoringPlayerIndex = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goals/RightGoal"]
+shape = SubResource("RectangleShape2D_goalshape")
