@@ -20,10 +20,9 @@ public partial class PlayerController : CharacterBody2D
 	[Export] public float SpeedToImpulse = 0.25f;
 	[Export] public float MinKickImpulse = 90f;
 	[Export] public float MaxKickImpulse = 220f;
-	[Export] public float KickCooldownSeconds = 0.08f;
 
 	private bool _wasOnFloor;
-	private double _kickCooldown;
+	private RigidBody2D _ballInContact;
 
 	public override void _Ready()
 	{
@@ -34,8 +33,6 @@ public partial class PlayerController : CharacterBody2D
 
 	public override void _PhysicsProcess(double delta)
 	{
-		_kickCooldown = Math.Max(0.0, _kickCooldown - delta);
-
 		var v = Velocity;
 		v.X = Input.GetAxis(LeftAction, RightAction) * Speed;
 
@@ -54,16 +51,22 @@ public partial class PlayerController : CharacterBody2D
 		Velocity = v;
 		MoveAndSlide();
 
+		RigidBody2D touchedBall = null;
 		for (int i = 0; i < GetSlideCollisionCount(); i++)
 		{
 			var collision = GetSlideCollision(i);
-			var collider = collision.GetCollider();
-
-			if (collider is RigidBody2D ball && ball.IsInGroup("ball"))
+			if (collision.GetCollider() is RigidBody2D rb && rb.IsInGroup("ball"))
 			{
-				TryKick(ball);
+				touchedBall = rb;
+				break;
 			}
 		}
+
+		// Only kick on fresh contact to prevent repeated impulses while overlapping
+		if (touchedBall != null && touchedBall != _ballInContact)
+			ApplyKickImpulse(touchedBall);
+
+		_ballInContact = touchedBall;
 
 		var p = GlobalPosition;
 		p.X = Mathf.Clamp(p.X, MinX, MaxX);
@@ -79,16 +82,17 @@ public partial class PlayerController : CharacterBody2D
 		}
 	}
 
-	private void TryKick(RigidBody2D ball)
+	private void ApplyKickImpulse(RigidBody2D ball)
 	{
-		if (_kickCooldown > 0)
-			return;
+		Vector2 contactNormal = (ball.GlobalPosition - GlobalPosition).Normalized();
+		float speed = Velocity.Length();
 
-		_kickCooldown = KickCooldownSeconds;
+		// Blend contact normal with player movement direction so fast runs send the ball forward
+		Vector2 dir = speed > 10f
+			? (contactNormal + Velocity.Normalized()).Normalized()
+			: contactNormal;
 
-		Vector2 dir = (ball.GlobalPosition - GlobalPosition).Normalized();
-
-		float strength = BaseKickImpulse + Velocity.Length() * SpeedToImpulse;
+		float strength = BaseKickImpulse + speed * SpeedToImpulse;
 		strength = Mathf.Clamp(strength, MinKickImpulse, MaxKickImpulse);
 
 		ball.ApplyCentralImpulse(dir * strength);
