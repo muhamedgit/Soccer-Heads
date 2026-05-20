@@ -19,6 +19,10 @@ radius = 32.0
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cpr0p"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_score_panel"]
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
 bg_color = Color(0.0352941, 0.0470588, 0.0784314, 0.84)
 border_width_left = 1
 border_width_top = 1
@@ -31,23 +35,23 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 shadow_color = Color(0, 0, 0, 0.35)
 shadow_size = 10
-content_margin_left = 20.0
-content_margin_top = 10.0
-content_margin_right = 20.0
-content_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_score_chip"]
+content_margin_left = 12.0
+content_margin_top = 3.0
+content_margin_right = 12.0
+content_margin_bottom = 3.0
 bg_color = Color(1, 1, 1, 0.08)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
-content_margin_left = 12.0
-content_margin_top = 3.0
-content_margin_right = 12.0
-content_margin_bottom = 3.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_timer_panel"]
+content_margin_left = 14.0
+content_margin_top = 4.0
+content_margin_right = 14.0
+content_margin_bottom = 4.0
 bg_color = Color(0.0352941, 0.0470588, 0.0784314, 0.84)
 border_width_left = 1
 border_width_top = 1
@@ -60,10 +64,6 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 shadow_color = Color(0, 0, 0, 0.28)
 shadow_size = 8
-content_margin_left = 14.0
-content_margin_top = 4.0
-content_margin_right = 14.0
-content_margin_bottom = 4.0
 
 [node name="MainGameScene" type="Node2D" unique_id=72174549]
 script = ExtResource("5_matchcontroller")
@@ -90,8 +90,7 @@ texture = ExtResource("3_78awf")
 shape = SubResource("CircleShape2D_ball1")
 
 [node name="Player1" type="CharacterBody2D" parent="." unique_id=1614461935]
-position = Vector2(149, 1016)
-collision_layer = 1
+position = Vector2(650, 995)
 collision_mask = 15
 script = ExtResource("2_cpr0p")
 
@@ -103,8 +102,7 @@ scale = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_s0nni")
 
 [node name="Player2" type="CharacterBody2D" parent="." unique_id=2088789380]
-position = Vector2(1800, 993)
-collision_layer = 1
+position = Vector2(1733, 988)
 collision_mask = 15
 script = ExtResource("2_cpr0p")
 LeftAction = "Player2_Left"
@@ -118,18 +116,19 @@ texture = ExtResource("3_78awf")
 scale = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_cpr0p")
 
-[node name="ScoreHud" type="CanvasLayer" parent="."]
+[node name="ScoreHud" type="CanvasLayer" parent="." unique_id=796546050]
 script = ExtResource("6_scorehud")
 
-[node name="HudRoot" type="Control" parent="ScoreHud"]
+[node name="HudRoot" type="Control" parent="ScoreHud" unique_id=1007487642]
+layout_mode = 3
 anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 138.0
 grow_horizontal = 2
 mouse_filter = 2
 
-[node name="ScorePanel" type="PanelContainer" parent="ScoreHud/HudRoot"]
-anchors_preset = 5
+[node name="ScorePanel" type="PanelContainer" parent="ScoreHud/HudRoot" unique_id=2013080984]
+layout_mode = 0
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -215.0
@@ -139,28 +138,28 @@ offset_bottom = 86.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_score_panel")
 
-[node name="ScoreRow" type="HBoxContainer" parent="ScoreHud/HudRoot/ScorePanel"]
+[node name="ScoreRow" type="HBoxContainer" parent="ScoreHud/HudRoot/ScorePanel" unique_id=482358368]
 layout_mode = 2
 theme_override_constants/separation = 14
 alignment = 1
 
-[node name="PlayerOneChip" type="PanelContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow"]
+[node name="PlayerOneChip" type="PanelContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow" unique_id=1557309878]
 custom_minimum_size = Vector2(104, 42)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_score_chip")
 
-[node name="PlayerOneText" type="VBoxContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerOneChip"]
+[node name="PlayerOneText" type="VBoxContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerOneChip" unique_id=796969378]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="PlayerOneName" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerOneChip/PlayerOneText"]
+[node name="PlayerOneName" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerOneChip/PlayerOneText" unique_id=571464048]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.498039, 0.768627, 1, 1)
 theme_override_font_sizes/font_size = 11
 text = "PLAYER 1"
 horizontal_alignment = 1
 
-[node name="PlayerOneScore" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow"]
+[node name="PlayerOneScore" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow" unique_id=1740175338]
 custom_minimum_size = Vector2(54, 44)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -169,7 +168,7 @@ text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Separator" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow"]
+[node name="Separator" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow" unique_id=1174249059]
 custom_minimum_size = Vector2(22, 44)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.42)
@@ -178,7 +177,7 @@ text = "-"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PlayerTwoScore" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow"]
+[node name="PlayerTwoScore" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow" unique_id=683215483]
 custom_minimum_size = Vector2(54, 44)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -187,24 +186,24 @@ text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="PlayerTwoChip" type="PanelContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow"]
+[node name="PlayerTwoChip" type="PanelContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow" unique_id=2131729155]
 custom_minimum_size = Vector2(104, 42)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_score_chip")
 
-[node name="PlayerTwoText" type="VBoxContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerTwoChip"]
+[node name="PlayerTwoText" type="VBoxContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerTwoChip" unique_id=480824811]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="PlayerTwoName" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerTwoChip/PlayerTwoText"]
+[node name="PlayerTwoName" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerTwoChip/PlayerTwoText" unique_id=1262414326]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.52549, 0.482353, 1)
 theme_override_font_sizes/font_size = 11
 text = "PLAYER 2"
 horizontal_alignment = 1
 
-[node name="TimerPanel" type="PanelContainer" parent="ScoreHud/HudRoot"]
-anchors_preset = 5
+[node name="TimerPanel" type="PanelContainer" parent="ScoreHud/HudRoot" unique_id=494136903]
+layout_mode = 0
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -62.0
@@ -214,7 +213,7 @@ offset_bottom = 128.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_timer_panel")
 
-[node name="TimerLabel" type="Label" parent="ScoreHud/HudRoot/TimerPanel"]
+[node name="TimerLabel" type="Label" parent="ScoreHud/HudRoot/TimerPanel" unique_id=2039442341]
 custom_minimum_size = Vector2(96, 24)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.92)

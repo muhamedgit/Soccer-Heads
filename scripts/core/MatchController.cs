@@ -116,6 +116,15 @@ public partial class MatchController : Node2D
 			return;
 
 		_matchEnded = true;
+
+		SetPlayersInputEnabled(false);
+
+		if (_ball != null)
+		{
+			_ball.LinearVelocity = Vector2.Zero;
+			_ball.AngularVelocity = 0f;
+		}
+
 		_sceneManager.GoToEndScreen();
 	}
 
