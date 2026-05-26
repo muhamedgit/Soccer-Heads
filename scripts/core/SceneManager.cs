@@ -16,6 +16,8 @@ public partial class SceneManager : Node
 
 		_isChangingScene = true;
 
+		UpdateMusicForScene(scenePath);
+
 		Error error = GetTree().ChangeSceneToFile(scenePath);
 
 		if (error != Error.Ok)
@@ -47,5 +49,18 @@ public partial class SceneManager : Node
 	public void GoToEndScreen()
 	{
 		GoTo(EndScreenScene);
+	}
+
+	private void UpdateMusicForScene(string scenePath)
+	{
+		var audioManager = GetNodeOrNull<AudioManager>("/root/AudioManager");
+
+		if (audioManager == null)
+			return;
+
+		if (scenePath == MatchScene)
+			audioManager.PlayGameplayMusic();
+		else
+			audioManager.StopMusic();
 	}
 }
