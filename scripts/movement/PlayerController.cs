@@ -16,10 +16,15 @@ public partial class PlayerController : CharacterBody2D
 	[Export] public float MinX = 50f;
 	[Export] public float MaxX = 2250f;
 
-	[Export] public float BaseKickImpulse = 120f;
-	[Export] public float SpeedToImpulse = 0.25f;
-	[Export] public float MinKickImpulse = 90f;
-	[Export] public float MaxKickImpulse = 220f;
+	[Export] public float BaseKickImpulse = 160f;
+	[Export] public float SpeedToImpulse = 0.5f;
+	[Export] public float MinKickImpulse = 120f;
+	[Export] public float MaxKickImpulse = 520f;
+
+	// Continuous push lets the player dribble/shove the ball while staying in contact,
+	// instead of only getting a single impulse on first touch.
+	[Export] public float MinPushSpeed = 5f;         // ignore pushes slower than this
+	[Export] public float PushResponsiveness = 0.8f; // how quickly the ball matches the push speed (0..1)
 
 	[Export] public Color Player1BodyColor = new Color(0.20f, 0.45f, 0.95f, 1.0f);
 	[Export] public Color Player2BodyColor = new Color(0.90f, 0.22f, 0.22f, 1.0f);
@@ -95,9 +100,13 @@ public partial class PlayerController : CharacterBody2D
 			}
 		}
 
-		// Only kick on fresh contact to prevent repeated impulses while overlapping
+		// Pop the ball on fresh contact (the "kick"), then keep pushing it while in
+		// contact so the player can dribble/shove rather than the ball sticking.
 		if (touchedBall != null && touchedBall != _ballInContact)
 			ApplyKickImpulse(touchedBall);
+
+		if (touchedBall != null)
+			ApplyContinuousPush(touchedBall);
 
 		_ballInContact = touchedBall;
 
@@ -148,6 +157,28 @@ public partial class PlayerController : CharacterBody2D
 		strength = Mathf.Clamp(strength, MinKickImpulse, MaxKickImpulse);
 
 		ball.ApplyCentralImpulse(dir * strength);
+	}
+
+	// While the player overlaps the ball and moves into it, bring the ball's speed
+	// along the push direction up toward the player's speed, so walking into the ball
+	// dribbles it instead of the ball stalling against the body.
+	private void ApplyContinuousPush(RigidBody2D ball)
+	{
+		Vector2 toBall = ball.GlobalPosition - GlobalPosition;
+		if (toBall.LengthSquared() < 1f)
+			return;
+
+		Vector2 dir = toBall.Normalized();
+		float playerInto = Velocity.Dot(dir);
+		if (playerInto <= MinPushSpeed)
+			return;
+
+		float ballAlong = ball.LinearVelocity.Dot(dir);
+		if (ballAlong >= playerInto)
+			return;
+
+		float deltaV = playerInto - ballAlong;
+		ball.ApplyCentralImpulse(dir * deltaV * ball.Mass * PushResponsiveness);
 	}
 
 	private void SetupPlaceholderSprite()
