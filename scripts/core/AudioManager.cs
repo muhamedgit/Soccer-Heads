@@ -5,7 +5,7 @@ public partial class AudioManager : Node
 	private const string GameplayMusicPath = "res://Assets/Audio/gameplay_loop.wav";
 	private const string MusicBusName = "Music";
 
-	[Export] public float MusicVolumeDb = -10f;
+	[Export] public float MusicVolumeDb = -24f;
 	[Export] public float FadeOutSeconds = 0.35f;
 
 	private AudioStreamPlayer _musicPlayer;

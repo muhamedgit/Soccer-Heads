@@ -12,15 +12,125 @@ public partial class Ball : RigidBody2D
 	[Export] public int SpriteDiameter = 64;
 	[Export] public int OutlineThickness = 4;
 
+	[Export] public float MinHitSpeed = 140f;
+	[Export] public float StrongHitSpeed = 900f;
+	[Export] public double HitSoundCooldownSeconds = 0.08;
+	[Export] public float MinHitVolumeDb = -18f;
+	[Export] public float MaxHitVolumeDb = -6f;
+
+	private const string BallHitSoundPath = "res://Assets/Audio/ball_hit.wav";
+	private const string HitSoundBus = "Master";
+
+	private AudioStreamPlayer _hitPlayer;
+	private double _hitCooldown;
+	private Vector2 _lastLinearVelocity;
+
+	private const uint PlayerLayer = 1 << 0;
+	private const uint GroundLayer = 1 << 2;
+	private const uint WallsLayer = 1 << 3;
+
 	public override void _Ready()
 	{
 		AddToGroup("ball");
+
+		ContactMonitor = true;
+		MaxContactsReported = 8;
+
 		SetupSprite();
+		SetupHitSound();
+
+		BodyEntered += OnBodyEntered;
+	}
+
+	public override void _PhysicsProcess(double delta)
+	{
+		if (_hitCooldown > 0)
+			_hitCooldown -= delta;
+
+		_lastLinearVelocity = LinearVelocity;
 	}
 
 	public void Kick(Vector2 direction, float strength)
 	{
 		ApplyCentralImpulse(direction.Normalized() * strength);
+	}
+
+	private void SetupHitSound()
+	{
+		_hitPlayer = new AudioStreamPlayer();
+		_hitPlayer.Name = "BallHitPlayer";
+		_hitPlayer.Bus = HitSoundBus;
+
+		AudioStream hitStream = ResourceLoader.Load<AudioStream>(BallHitSoundPath);
+
+		if (hitStream == null)
+		{
+			GD.PushWarning($"Ball hit sound was not found at: {BallHitSoundPath}");
+			return;
+		}
+
+		_hitPlayer.Stream = hitStream;
+		AddChild(_hitPlayer);
+	}
+
+	private void OnBodyEntered(Node body)
+	{
+		if (_hitCooldown > 0)
+			return;
+
+		if (!IsRelevantCollision(body))
+			return;
+
+		float impactSpeed = _lastLinearVelocity.Length();
+
+		if (impactSpeed < MinHitSpeed)
+			return;
+
+		PlayHitSound(impactSpeed);
+	}
+
+	private bool IsRelevantCollision(Node body)
+	{
+		if (body is CollisionObject2D collisionObject)
+		{
+			uint relevantLayers = PlayerLayer | GroundLayer | WallsLayer;
+
+			if ((collisionObject.CollisionLayer & relevantLayers) != 0)
+				return true;
+		}
+
+		if (body is CharacterBody2D)
+			return true;
+
+		if (body is StaticBody2D)
+			return true;
+
+		if (body.IsInGroup("player"))
+			return true;
+
+		if (body.IsInGroup("wall"))
+			return true;
+
+		if (body.IsInGroup("ground"))
+			return true;
+
+		return false;
+	}
+
+	private void PlayHitSound(float impactSpeed)
+	{
+		if (_hitPlayer == null || _hitPlayer.Stream == null)
+			return;
+
+		float volumeRatio = Mathf.InverseLerp(MinHitSpeed, StrongHitSpeed, impactSpeed);
+		volumeRatio = Mathf.Clamp(volumeRatio, 0f, 1f);
+
+		_hitPlayer.VolumeDb = Mathf.Lerp(MinHitVolumeDb, MaxHitVolumeDb, volumeRatio);
+
+		_hitPlayer.Stop();
+		_hitPlayer.Play();
+
+		_hitCooldown = HitSoundCooldownSeconds;
 	}
 
 	private void SetupSprite()
@@ -64,7 +174,7 @@ public partial class Ball : RigidBody2D
 		float radius = size * 0.5f - 1.0f;
 
 		Color fillColor = style == BallVisualStyle.HighContrast
-			? new Color(1.0f, 0.92f, 0.2f, 1.0f)   // rumena za boljši kontrast
+			? new Color(1.0f, 0.92f, 0.2f, 1.0f)
 			: Colors.White;
 
 		for (int y = 0; y < size; y++)
@@ -78,7 +188,6 @@ public partial class Ball : RigidBody2D
 				{
 					image.SetPixel(x, y, fillColor);
 
-					// črn outline
 					if (dist >= radius - outlineThickness)
 						image.SetPixel(x, y, Colors.Black);
 				}
