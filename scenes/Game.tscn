@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://dmbk8fqevf7wa" path="res://scripts/ball/Ball.cs" id="4_ball01"]
 [ext_resource type="Script" uid="uid://d0rt74by6qofx" path="res://scripts/core/MatchController.cs" id="5_matchcontroller"]
 [ext_resource type="Script" uid="uid://by3574jl8q5at" path="res://scripts/ui/ScoreHud.cs" id="6_scorehud"]
+[ext_resource type="Script" path="res://scripts/ui/PauseMenu.cs" id="7_pausemenu"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ball1"]
 friction = 0.1
@@ -221,3 +222,60 @@ theme_override_font_sizes/font_size = 22
 text = "01:30"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+process_mode = 3
+script = ExtResource("7_pausemenu")
+
+[node name="Overlay" type="Control" parent="PauseMenu"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="PauseMenu/Overlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="CenterContainer" type="CenterContainer" parent="PauseMenu/Overlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PauseMenu/Overlay/CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="TitleLabel" type="Label" parent="PauseMenu/Overlay/CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Paused"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="PauseMenu/Overlay/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(260, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Resume"
+
+[node name="RestartButton" type="Button" parent="PauseMenu/Overlay/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(260, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Restart"
+
+[node name="MainMenuButton" type="Button" parent="PauseMenu/Overlay/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(260, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Main Menu"
