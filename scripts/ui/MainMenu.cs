@@ -6,6 +6,7 @@ public partial class MainMenu : Control
 	private Button _modeButton;
 	private Button _difficultyButton;
 	private Button _instructionsButton;
+	private Button _settingsButton;
 	private Button _quitButton;
 
 	private bool _isStartingMatch = false;
@@ -21,6 +22,7 @@ public partial class MainMenu : Control
 		_modeButton = GetNode<Button>("CenterContainer/VBoxContainer/ModeButton");
 		_difficultyButton = GetNode<Button>("CenterContainer/VBoxContainer/DifficultyButton");
 		_instructionsButton = GetNode<Button>("CenterContainer/VBoxContainer/InstructionsButton");
+		_settingsButton = GetNode<Button>("CenterContainer/VBoxContainer/SettingsButton");
 		_quitButton = GetNode<Button>("CenterContainer/VBoxContainer/QuitButton");
 
 		// Restore the last chosen mode/difficulty so the menu reflects the current setting.
@@ -32,6 +34,7 @@ public partial class MainMenu : Control
 		_modeButton.Pressed += OnModePressed;
 		_difficultyButton.Pressed += OnDifficultyPressed;
 		_instructionsButton.Pressed += OnInstructionsPressed;
+		_settingsButton.Pressed += OnSettingsPressed;
 		_quitButton.Pressed += OnQuitPressed;
 
 		UpdateModeUi();
@@ -95,6 +98,13 @@ public partial class MainMenu : Control
 		GD.Print("Instructions button pressed.");
 
 		GetNode<SceneManager>("/root/SceneManager").GoToInstructions();
+	}
+
+	private void OnSettingsPressed()
+	{
+		GD.Print("Settings button pressed.");
+
+		GetNode<SceneManager>("/root/SceneManager").GoToSettings();
 	}
 
 	private void OnQuitPressed()
