@@ -11,10 +11,9 @@ config_version=5
 [application]
 
 config/name="SoccerHeadz"
-run/main_scene="uid://buxcwxaf02yvv"
+run/main_scene="uid://dbnwu5mik65jv"
 config/features=PackedStringArray("4.6", "C#", "Mobile")
 config/icon="res://icon.svg"
-<<<<<<<HEADrun/main_scene="uid://bswec7weouqpa"
 
 [autoload]
 
