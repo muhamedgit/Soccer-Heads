@@ -14,6 +14,14 @@ public partial class ScoreHud : CanvasLayer
 		_timerLabel = GetNode<Label>("HudRoot/TimerPanel/TimerLabel");
 		_gameState = GetNode<GameState>("/root/GameState");
 
+		if (_gameState.Mode == GameState.GameMode.PlayerVsAi)
+		{
+			var playerTwoName = GetNodeOrNull<Label>(
+				"HudRoot/ScorePanel/ScoreRow/PlayerTwoChip/PlayerTwoText/PlayerTwoName");
+			if (playerTwoName != null)
+				playerTwoName.Text = "COMPUTER";
+		}
+
 		_gameState.ScoreChanged += UpdateScore;
 		_gameState.TimeChanged += UpdateTime;
 		UpdateScore(_gameState.PlayerOneScore, _gameState.PlayerTwoScore);
