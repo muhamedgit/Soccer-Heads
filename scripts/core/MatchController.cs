@@ -49,6 +49,21 @@ public partial class MatchController : Node2D
 		ResetMatchObjects();
 		CreateGoalHighlights();
 		ConnectGoalTriggers();
+		ConfigureAiOpponent();
+	}
+
+	private void ConfigureAiOpponent()
+	{
+		if (_gameState.Mode != GameState.GameMode.PlayerVsAi)
+			return;
+
+		// Player 2 is the computer. It attacks the goal on the opposite side of its home,
+		// derived from the start positions so it works regardless of arena orientation.
+		float center = (_playerOneStartPosition.X + _playerTwoStartPosition.X) * 0.5f;
+		int attackDir = _playerTwoStartPosition.X >= center ? -1 : 1;
+
+		_playerTwo.ConfigureAsAi(_gameState.Difficulty, attackDir, _ball);
+		GD.Print($"AI opponent enabled for Player 2 (difficulty {_gameState.Difficulty}, attackDir {attackDir}).");
 	}
 
 	private void ConnectGoalTriggers()

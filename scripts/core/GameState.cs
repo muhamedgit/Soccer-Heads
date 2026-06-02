@@ -2,6 +2,19 @@ using Godot;
 
 public partial class GameState : Node
 {
+	public enum GameMode
+	{
+		PlayerVsPlayer,
+		PlayerVsAi
+	}
+
+	public enum AiDifficulty
+	{
+		Beginner,
+		Normal,
+		Intermediate
+	}
+
 	[Signal]
 	public delegate void ScoreChangedEventHandler(int playerOneScore, int playerTwoScore);
 
@@ -11,6 +24,11 @@ public partial class GameState : Node
 	public int PlayerOneScore { get; private set; }
 	public int PlayerTwoScore { get; private set; }
 	public float MatchTimeLeft { get; private set; }
+
+	// Chosen on the main menu and kept across scene changes (this is an autoload).
+	// ResetMatch deliberately leaves these untouched.
+	public GameMode Mode { get; set; } = GameMode.PlayerVsPlayer;
+	public AiDifficulty Difficulty { get; set; } = AiDifficulty.Normal;
 
 	public const float DefaultMatchDuration = 90f;
 	public const int ScoreToWin = 5;

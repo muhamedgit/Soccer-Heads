@@ -28,10 +28,28 @@ public partial class PlayerController : CharacterBody2D
 	[Export] public int PlaceholderHeight = 256;
 	[Export] public int OutlineThickness = 5;
 
+	public enum ControlMode { Human, Ai }
+
+	[Export] public ControlMode Control = ControlMode.Human;
+
 	public bool InputEnabled { get; set; } = true;
 
 	private bool _wasOnFloor;
 	private RigidBody2D _ballInContact;
+
+	private AiController _aiBrain;
+	private RigidBody2D _aiBall;
+	private int _aiAttackDir = -1;
+
+	// Called by MatchController to turn this player into an AI opponent.
+	public void ConfigureAsAi(GameState.AiDifficulty difficulty, int attackDirection, RigidBody2D ball)
+	{
+		Control = ControlMode.Ai;
+		_aiAttackDir = attackDirection;
+		_aiBall = ball;
+		_aiBrain = new AiController();
+		_aiBrain.Configure(difficulty);
+	}
 
 	public override void _Ready()
 	{
@@ -44,8 +62,10 @@ public partial class PlayerController : CharacterBody2D
 
 	public override void _PhysicsProcess(double delta)
 	{
+		ReadControls(delta, out float moveAxis, out bool jumpPressed);
+
 		var v = Velocity;
-		v.X = InputEnabled ? Input.GetAxis(LeftAction, RightAction) * Speed : 0f;
+		v.X = InputEnabled ? moveAxis * Speed : 0f;
 
 		if (!IsOnFloor())
 		{
@@ -58,7 +78,7 @@ public partial class PlayerController : CharacterBody2D
 			v.Y = 0f;
 		}
 
-		if (InputEnabled && Input.IsActionJustPressed(JumpAction) && IsOnFloor())
+		if (InputEnabled && jumpPressed && IsOnFloor())
 			v.Y = JumpVelocity;
 
 		Velocity = v;
@@ -93,6 +113,25 @@ public partial class PlayerController : CharacterBody2D
 #endif
 			_wasOnFloor = onFloor;
 		}
+	}
+
+	// Movement intent comes from the keyboard for a human, or from the AI brain otherwise.
+	private void ReadControls(double delta, out float moveAxis, out bool jumpPressed)
+	{
+		if (Control == ControlMode.Ai && _aiBrain != null && IsInstanceValid(_aiBall))
+		{
+			(moveAxis, jumpPressed) = _aiBrain.Think(
+				GlobalPosition,
+				_aiBall.GlobalPosition,
+				_aiBall.LinearVelocity,
+				_aiAttackDir,
+				IsOnFloor(),
+				delta);
+			return;
+		}
+
+		moveAxis = Input.GetAxis(LeftAction, RightAction);
+		jumpPressed = Input.IsActionJustPressed(JumpAction);
 	}
 
 	private void ApplyKickImpulse(RigidBody2D ball)
