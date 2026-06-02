@@ -85,7 +85,7 @@ public partial class GameState : Node
 			return "Player 1 Wins";
 
 		if (PlayerTwoScore > PlayerOneScore)
-			return "Player 2 Wins";
+			return Mode == GameMode.PlayerVsAi ? "Computer Wins" : "Player 2 Wins";
 
 		return "Draw";
 	}
