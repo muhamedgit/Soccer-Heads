@@ -4,6 +4,7 @@ public partial class SceneManager : Node
 {
 	public const string MainMenuScene = "res://scenes/MainMenu.tscn";
 	public const string InstructionsScene = "res://scenes/Instructions.tscn";
+	public const string SettingsScene = "res://scenes/Settings.tscn";
 	public const string MatchScene = "res://scenes/Game.tscn";
 	public const string EndScreenScene = "res://scenes/EndScreen.tscn";
 
@@ -39,6 +40,11 @@ public partial class SceneManager : Node
 	public void GoToInstructions()
 	{
 		GoTo(InstructionsScene);
+	}
+
+	public void GoToSettings()
+	{
+		GoTo(SettingsScene);
 	}
 
 	public void GoToMatch()

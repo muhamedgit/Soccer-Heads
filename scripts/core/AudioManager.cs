@@ -7,6 +7,8 @@ public partial class AudioManager : Node
 
 	private const string MusicBusName = "Music";
 	private const string SfxBusName = "Master";
+	private const string MasterBusName = "Master";
+	private const string SettingsPath = "user://settings.cfg";
 
 	[Export] public float MusicVolumeDb = -24f;
 	[Export] public float GoalSfxVolumeDb = -5f;
@@ -25,6 +27,50 @@ public partial class AudioManager : Node
 
 		SetupMusicPlayer();
 		SetupGoalSfxPlayer();
+		LoadVolume();
+	}
+
+	// Master volume as a 0..1 linear value, backed by the "Master" audio bus and
+	// persisted to user://settings.cfg so it survives restarts.
+	public float GetMasterVolume()
+	{
+		int idx = AudioServer.GetBusIndex(MasterBusName);
+		if (idx < 0)
+			return 1f;
+
+		return Mathf.DbToLinear(AudioServer.GetBusVolumeDb(idx));
+	}
+
+	public void SetMasterVolume(float linear)
+	{
+		linear = Mathf.Clamp(linear, 0f, 1f);
+
+		int idx = AudioServer.GetBusIndex(MasterBusName);
+		if (idx >= 0)
+			AudioServer.SetBusVolumeDb(idx, linear > 0.0001f ? Mathf.LinearToDb(linear) : -80f);
+
+		SaveVolume(linear);
+	}
+
+	private void LoadVolume()
+	{
+		var config = new ConfigFile();
+		if (config.Load(SettingsPath) != Error.Ok)
+			return;
+
+		float linear = Mathf.Clamp(config.GetValue("audio", "master_volume", 1.0f).AsSingle(), 0f, 1f);
+
+		int idx = AudioServer.GetBusIndex(MasterBusName);
+		if (idx >= 0)
+			AudioServer.SetBusVolumeDb(idx, linear > 0.0001f ? Mathf.LinearToDb(linear) : -80f);
+	}
+
+	private void SaveVolume(float linear)
+	{
+		var config = new ConfigFile();
+		config.Load(SettingsPath); // ignore error: file may not exist yet
+		config.SetValue("audio", "master_volume", linear);
+		config.Save(SettingsPath);
 	}
 
 	public override void _Process(double delta)
