@@ -17,9 +17,9 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-SceneManager="*uid://ci375kjuxfaam"
-GameState="*uid://bk6hwbf726wr5"
-AudioManager="*uid://fkh7etrjktfh"
+SceneManager="*res://scripts/core/SceneManager.cs"
+GameState="*res://scripts/core/GameState.cs"
+AudioManager="*res://scripts/core/AudioManager.cs"
 
 [display]
 
