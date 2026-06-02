@@ -27,13 +27,20 @@ public partial class GameState : Node
 	public void AddGoalForPlayerOne()
 	{
 		PlayerOneScore++;
+		PlayGoalSound();
 		EmitSignal(SignalName.ScoreChanged, PlayerOneScore, PlayerTwoScore);
 	}
 
 	public void AddGoalForPlayerTwo()
 	{
 		PlayerTwoScore++;
+		PlayGoalSound();
 		EmitSignal(SignalName.ScoreChanged, PlayerOneScore, PlayerTwoScore);
+	}
+
+	private void PlayGoalSound()
+	{
+		GetNodeOrNull<AudioManager>("/root/AudioManager")?.PlayGoalScoredSound();
 	}
 
 	public void SetTimeLeft(float timeLeft)
