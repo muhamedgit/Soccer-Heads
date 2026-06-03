@@ -6,6 +6,7 @@ public partial class ScoreHud : CanvasLayer
 	private Label _playerTwoScoreLabel;
 	private Label _timerLabel;
 	private GameState _gameState;
+	private int _lastShownSeconds = -1;
 
 	public override void _Ready()
 	{
@@ -45,6 +46,12 @@ public partial class ScoreHud : CanvasLayer
 
 	private void UpdateTime(float secondsLeft)
 	{
+		// The display only changes once per second, so skip redundant per-frame updates.
+		int wholeSeconds = Mathf.FloorToInt(Mathf.Max(0f, secondsLeft));
+		if (wholeSeconds == _lastShownSeconds)
+			return;
+
+		_lastShownSeconds = wholeSeconds;
 		_timerLabel.Text = FormatTime(secondsLeft);
 	}
 

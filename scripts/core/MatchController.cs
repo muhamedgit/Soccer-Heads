@@ -116,7 +116,8 @@ public partial class MatchController : Node2D
 
 	public override void _PhysicsProcess(double delta)
 	{
-		if (_matchEnded)
+		// Freeze the clock while the match is over or during the post-goal reset.
+		if (_matchEnded || _isResetting)
 			return;
 
 		_gameState.SetTimeLeft(_gameState.MatchTimeLeft - (float)delta);
