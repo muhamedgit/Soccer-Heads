@@ -16,10 +16,12 @@ public partial class PlayerController : CharacterBody2D
 	[Export] public float MinX = 50f;
 	[Export] public float MaxX = 2250f;
 
-	[Export] public float BaseKickImpulse = 160f;
-	[Export] public float SpeedToImpulse = 0.5f;
-	[Export] public float MinKickImpulse = 120f;
-	[Export] public float MaxKickImpulse = 520f;
+	// Bounce off the player: the faster the player moves into the ball, the harder it
+	// launches. Outgoing speed = baseline + reflected incoming speed + a share of player speed.
+	[Export] public float BaseKickSpeed = 250f;    // launch even from a standing touch
+	[Export] public float Bounciness = 1.4f;       // how much of the ball's incoming speed is reflected
+	[Export] public float KickSpeedFactor = 1.3f;  // how much of the player's speed adds to the launch
+	[Export] public float MaxBallSpeed = 2200f;    // cap on the resulting launch speed
 
 	// Continuous push lets the player dribble/shove the ball while staying in contact,
 	// instead of only getting a single impulse on first touch.
@@ -146,17 +148,26 @@ public partial class PlayerController : CharacterBody2D
 	private void ApplyKickImpulse(RigidBody2D ball)
 	{
 		Vector2 contactNormal = (ball.GlobalPosition - GlobalPosition).Normalized();
-		float speed = Velocity.Length();
+		float playerSpeed = Velocity.Length();
 
 		// Blend contact normal with player movement direction so fast runs send the ball forward
-		Vector2 dir = speed > 10f
+		Vector2 dir = playerSpeed > 10f
 			? (contactNormal + Velocity.Normalized()).Normalized()
 			: contactNormal;
 
-		float strength = BaseKickImpulse + speed * SpeedToImpulse;
-		strength = Mathf.Clamp(strength, MinKickImpulse, MaxKickImpulse);
+		float ballAlong = ball.LinearVelocity.Dot(dir);
+		float playerInto = Mathf.Max(0f, Velocity.Dot(dir));  // player speed heading into the ball
+		float incoming = Mathf.Max(0f, -ballAlong);           // ball speed heading into the player
 
-		ball.ApplyCentralImpulse(dir * strength);
+		// Bouncier the faster the player moves: launch = baseline + reflected incoming
+		// speed (bounciness) + a share of the player's speed.
+		float targetOut = BaseKickSpeed + incoming * Bounciness + playerInto * KickSpeedFactor;
+		targetOut = Mathf.Min(targetOut, MaxBallSpeed);
+
+		float currentOut = Mathf.Max(0f, ballAlong);
+		float deltaV = targetOut - currentOut;
+		if (deltaV > 0f)
+			ball.ApplyCentralImpulse(dir * deltaV * ball.Mass);
 	}
 
 	// While the player overlaps the ball and moves into it, bring the ball's speed
