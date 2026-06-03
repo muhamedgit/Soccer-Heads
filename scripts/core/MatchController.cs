@@ -5,7 +5,7 @@ public partial class MatchController : Node2D
 {
 	private PlayerController _playerOne;
 	private PlayerController _playerTwo;
-	private RigidBody2D _ball;
+	private Ball _ball;
 	private GameState _gameState;
 	private SceneManager _sceneManager;
 	private bool _matchEnded;
@@ -38,7 +38,7 @@ public partial class MatchController : Node2D
 
 		_playerOne = GetNode<PlayerController>("Player1");
 		_playerTwo = GetNode<PlayerController>("Player2");
-		_ball = GetNode<RigidBody2D>("Ball");
+		_ball = GetNode<Ball>("Ball");
 		_gameState = GetNode<GameState>("/root/GameState");
 		_sceneManager = GetNode<SceneManager>("/root/SceneManager");
 
@@ -151,9 +151,7 @@ public partial class MatchController : Node2D
 		_playerTwo.GlobalPosition = _playerTwoStartPosition;
 		_playerTwo.Velocity = Vector2.Zero;
 
-		_ball.GlobalPosition = _ballStartPosition;
-		_ball.LinearVelocity = Vector2.Zero;
-		_ball.AngularVelocity = 0f;
+		_ball.ResetTo(_ballStartPosition);
 
 		GD.Print("Match objects reset.");
 	}
