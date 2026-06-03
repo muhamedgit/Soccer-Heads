@@ -25,6 +25,9 @@ public partial class Ball : RigidBody2D
 	private double _hitCooldown;
 	private Vector2 _lastLinearVelocity;
 
+	private bool _teleportQueued;
+	private Vector2 _teleportTarget;
+
 	private const uint PlayerLayer = 1 << 0;
 	private const uint GroundLayer = 1 << 2;
 	private const uint WallsLayer = 1 << 3;
@@ -48,6 +51,29 @@ public partial class Ball : RigidBody2D
 			_hitCooldown -= delta;
 
 		_lastLinearVelocity = LinearVelocity;
+	}
+
+	// Teleport the ball reliably. Setting GlobalPosition directly on a RigidBody2D is
+	// overwritten by the physics server, so the move is applied inside _IntegrateForces.
+	public void ResetTo(Vector2 position)
+	{
+		_teleportTarget = position;
+		_teleportQueued = true;
+	}
+
+	public override void _IntegrateForces(PhysicsDirectBodyState2D state)
+	{
+		if (!_teleportQueued)
+			return;
+
+		Transform2D transform = state.Transform;
+		transform.Origin = _teleportTarget;
+		state.Transform = transform;
+		state.LinearVelocity = Vector2.Zero;
+		state.AngularVelocity = 0f;
+
+		_lastLinearVelocity = Vector2.Zero;
+		_teleportQueued = false;
 	}
 
 	public void Kick(Vector2 direction, float strength)
