@@ -50,13 +50,20 @@ public partial class PlayerController : CharacterBody2D
 	private AiController _aiBrain;
 	private RigidBody2D _aiBall;
 	private int _aiAttackDir = -1;
+	private Vector2 _aiTargetGoal;
+	private Vector2 _aiOwnGoal;
+	private PerkManager _aiPerkManager;
 
 	// Called by MatchController to turn this player into an AI opponent.
-	public void ConfigureAsAi(GameState.AiDifficulty difficulty, int attackDirection, RigidBody2D ball)
+	public void ConfigureAsAi(GameState.AiDifficulty difficulty, int attackDirection, RigidBody2D ball,
+		Vector2 targetGoal, Vector2 ownGoal, PerkManager perkManager)
 	{
 		Control = ControlMode.Ai;
 		_aiAttackDir = attackDirection;
 		_aiBall = ball;
+		_aiTargetGoal = targetGoal;
+		_aiOwnGoal = ownGoal;
+		_aiPerkManager = perkManager;
 		_aiBrain = new AiController();
 		_aiBrain.Configure(difficulty);
 	}
@@ -143,13 +150,28 @@ public partial class PlayerController : CharacterBody2D
 	{
 		if (Control == ControlMode.Ai && _aiBrain != null && IsInstanceValid(_aiBall))
 		{
-			(moveAxis, jumpPressed) = _aiBrain.Think(
-				GlobalPosition,
-				_aiBall.GlobalPosition,
-				_aiBall.LinearVelocity,
-				_aiAttackDir,
-				IsOnFloor(),
-				delta);
+			var ctx = new AiController.AiContext
+			{
+				SelfPos = GlobalPosition,
+				BallPos = _aiBall.GlobalPosition,
+				BallVel = _aiBall.LinearVelocity,
+				TargetGoal = _aiTargetGoal,
+				OwnGoal = _aiOwnGoal,
+				AttackDir = _aiAttackDir,
+				OnFloor = IsOnFloor(),
+				IsLastToucher = _gameState != null && _gameState.LastBallToucher == _playerIndex,
+				Delta = delta
+			};
+
+			if (_aiPerkManager != null &&
+				_aiPerkManager.TryGetActivePerk(out Vector2 perkPos, out bool perkAdvantage))
+			{
+				ctx.HasPerk = true;
+				ctx.PerkPos = perkPos;
+				ctx.PerkIsAdvantage = perkAdvantage;
+			}
+
+			(moveAxis, jumpPressed) = _aiBrain.Think(in ctx);
 			return;
 		}
 

@@ -42,6 +42,7 @@ public partial class PerkManager : Node
 
 	private List<PerkDefinition> _registry;
 	private PerkPickup _pickup;
+	private bool _pickupIsAdvantage;
 	private float _spawnTimer;
 
 	private ActivePerk _activeP1;
@@ -144,8 +145,24 @@ public partial class PerkManager : Node
 		pickup.PickedUp += OnPickedUp;
 
 		_pickup = pickup;
+		_pickupIsAdvantage = def.IsAdvantage;
 		_spawnTimer = SpawnInterval;
 		_audio?.PlayPerkSpawnSound();
+	}
+
+	// Lets the AI see the active pickup so it can chase advantages / avoid disadvantages.
+	public bool TryGetActivePerk(out Vector2 pos, out bool isAdvantage)
+	{
+		if (IsInstanceValid(_pickup))
+		{
+			pos = _pickup.GlobalPosition;
+			isAdvantage = _pickupIsAdvantage;
+			return true;
+		}
+
+		pos = Vector2.Zero;
+		isAdvantage = false;
+		return false;
 	}
 
 	private void OnPickedUp(int perkType)

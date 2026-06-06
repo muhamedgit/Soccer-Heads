@@ -95,14 +95,16 @@ public partial class MatchController : Node2D
 		CreateGoalHighlights();
 		CreateMatchCamera();
 		ConnectGoalTriggers();
-		ConfigureAiOpponent();
-		CreateCountdownOverlay();
-		CreateGoalCelebrationOverlay();
 
+		// Create the perk manager before configuring the AI, so the AI gets a live reference.
 		_perkManager = new PerkManager();
 		AddChild(_perkManager);
 		_perkManager.Initialize(this, _playerOne, _playerTwo, _ball, _shakeRng, _gameState);
 		_perkManager.StartSpawning();
+
+		ConfigureAiOpponent();
+		CreateCountdownOverlay();
+		CreateGoalCelebrationOverlay();
 
 		// Lock input synchronously before the first physics frame so players cannot move
 		// before the countdown begins, then kick off the countdown once the tree is ready.
@@ -120,7 +122,10 @@ public partial class MatchController : Node2D
 		float center = (_playerOneStartPosition.X + _playerTwoStartPosition.X) * 0.5f;
 		int attackDir = _playerTwoStartPosition.X >= center ? -1 : 1;
 
-		_playerTwo.ConfigureAsAi(_gameState.Difficulty, attackDir, _ball);
+		Vector2 targetGoal = attackDir < 0 ? LeftGoalHighlightPosition : RightGoalHighlightPosition;
+		Vector2 ownGoal = attackDir < 0 ? RightGoalHighlightPosition : LeftGoalHighlightPosition;
+
+		_playerTwo.ConfigureAsAi(_gameState.Difficulty, attackDir, _ball, targetGoal, ownGoal, _perkManager);
 		GD.Print($"AI opponent enabled for Player 2 (difficulty {_gameState.Difficulty}, attackDir {attackDir}).");
 	}
 
