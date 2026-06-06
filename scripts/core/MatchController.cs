@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Threading.Tasks;
 
 public partial class MatchController : Node2D
 {
@@ -10,11 +11,26 @@ public partial class MatchController : Node2D
 	private SceneManager _sceneManager;
 	private bool _matchEnded;
 	private bool _isResetting;
+	private bool _countingDown;
+
+	private CanvasLayer _countdownLayer;
+	private Label _countdownLabel;
 
 	private GoalTrigger _leftGoal;
 	private GoalTrigger _rightGoal;
 
-	[Export] public float GoalResetDelay = 0.7f;
+	// Short "goal feedback" beat after the snap-back, before the kickoff countdown starts.
+	[Export] public float GoalResetDelay = 0.4f;
+
+	// Kickoff countdown shown at match start and after every goal.
+	[Export] public int CountdownStartNumber = 3;
+	[Export] public float CountdownStepSeconds = 0.7f;   // time each of "3","2","1" is shown
+	[Export] public float GoFlashSeconds = 0.5f;          // time "GO!" is shown before play resumes
+	[Export] public int CountdownFontSize = 320;          // large text on the 2304x1536 viewport
+	[Export] public string CountdownGoText = "GO!";
+	[Export] public Color CountdownNumberColor = Palette.UiText;
+	[Export] public Color CountdownGoColor = Palette.ArcadeYellow;
+	[Export] public int CountdownCanvasLayer = 2;         // above the HUD (ScoreHud/PauseMenu default to layer 1)
 
 	private Vector2 _playerOneStartPosition;
 	private Vector2 _playerTwoStartPosition;
@@ -50,6 +66,12 @@ public partial class MatchController : Node2D
 		CreateGoalHighlights();
 		ConnectGoalTriggers();
 		ConfigureAiOpponent();
+		CreateCountdownOverlay();
+
+		// Lock input synchronously before the first physics frame so players cannot move
+		// before the countdown begins, then kick off the countdown once the tree is ready.
+		SetPlayersInputEnabled(false);
+		Callable.From(StartKickoffCountdown).CallDeferred();
 	}
 
 	private void ConfigureAiOpponent()
@@ -84,7 +106,7 @@ public partial class MatchController : Node2D
 
 	private async void OnGoalScored(int scoringPlayerIndex)
 	{
-		if (_matchEnded || _isResetting)
+		if (_matchEnded || _isResetting || _countingDown)
 			return;
 
 		if (scoringPlayerIndex == 0)
@@ -102,22 +124,29 @@ public partial class MatchController : Node2D
 		SetPlayersInputEnabled(false);
 		ResetMatchObjects();
 
+		// Short feedback beat with everything snapped back to kickoff positions.
 		if (GoalResetDelay > 0f)
 			await ToSignal(GetTree().CreateTimer(GoalResetDelay), SceneTreeTimer.SignalName.Timeout);
 
 		if (!IsInstanceValid(this) || _matchEnded)
 			return;
 
+		// Re-arm the goals before play resumes; the ball is centred and motionless here.
 		_leftGoal?.ResetLock();
 		_rightGoal?.ResetLock();
-		SetPlayersInputEnabled(true);
+
+		// Run the kickoff countdown (it re-enables input once "GO!" clears). The clock stays
+		// frozen throughout: _isResetting remains true until the countdown takes over the
+		// freeze via _countingDown, so at least one freeze flag is set the whole transition.
+		await RunKickoffCountdownAsync();
 		_isResetting = false;
 	}
 
 	public override void _PhysicsProcess(double delta)
 	{
-		// Freeze the clock while the match is over or during the post-goal reset.
-		if (_matchEnded || _isResetting)
+		// Freeze the clock while the match is over, during the post-goal reset,
+		// or while the kickoff countdown is running.
+		if (_matchEnded || _isResetting || _countingDown)
 			return;
 
 		_gameState.SetTimeLeft(_gameState.MatchTimeLeft - (float)delta);
@@ -164,6 +193,106 @@ public partial class MatchController : Node2D
 
 		if (_playerTwo != null)
 			_playerTwo.InputEnabled = enabled;
+	}
+
+	private void CreateCountdownOverlay()
+	{
+		// Rebuild defensively (mirrors CreateGoalHighlights) so a reused tree never stacks overlays.
+		GetNodeOrNull<CanvasLayer>("CountdownLayer")?.QueueFree();
+
+		_countdownLayer = new CanvasLayer
+		{
+			Name = "CountdownLayer",
+			Layer = CountdownCanvasLayer,
+			Visible = false
+		};
+		AddChild(_countdownLayer);
+
+		// Full-rect root so the label stays centred at any window scale; ignore mouse input so
+		// the pause menu buttons remain clickable while the overlay is visible.
+		var root = new Control { Name = "CountdownRoot", MouseFilter = Control.MouseFilterEnum.Ignore };
+		root.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		_countdownLayer.AddChild(root);
+
+		_countdownLabel = new Label
+		{
+			Name = "CountdownLabel",
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center,
+			MouseFilter = Control.MouseFilterEnum.Ignore
+		};
+		_countdownLabel.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		Palette.ApplyReadableLabel(_countdownLabel, CountdownFontSize);
+		root.AddChild(_countdownLabel);
+	}
+
+	// async void starter so _Ready (which cannot be async) can launch the countdown via CallDeferred.
+	private async void StartKickoffCountdown()
+	{
+		await RunKickoffCountdownAsync();
+	}
+
+	// Shared "3-2-1-GO!" countdown used at match start and after every goal. Locks input,
+	// shows the overlay, then re-enables input once "GO!" clears. The SceneTreeTimer waits
+	// respect GetTree().Paused, so the countdown naturally freezes and resumes with the pause menu.
+	private async Task RunKickoffCountdownAsync()
+	{
+		if (_countingDown)
+			return;
+
+		_countingDown = true;
+		SetPlayersInputEnabled(false);
+
+		if (_countdownLayer != null)
+			_countdownLayer.Visible = true;
+
+		for (int n = CountdownStartNumber; n >= 1; n--)
+		{
+			if (_countdownLabel != null)
+			{
+				_countdownLabel.AddThemeColorOverride("font_color", CountdownNumberColor);
+				_countdownLabel.Text = n.ToString();
+			}
+
+			await ToSignal(GetTree().CreateTimer(CountdownStepSeconds), SceneTreeTimer.SignalName.Timeout);
+
+			if (!IsInstanceValid(this))
+				return;
+			if (_matchEnded)
+			{
+				CleanupCountdown(reenableInput: false);
+				return;
+			}
+		}
+
+		if (_countdownLabel != null)
+		{
+			_countdownLabel.AddThemeColorOverride("font_color", CountdownGoColor);
+			_countdownLabel.Text = CountdownGoText;
+		}
+
+		await ToSignal(GetTree().CreateTimer(GoFlashSeconds), SceneTreeTimer.SignalName.Timeout);
+
+		if (!IsInstanceValid(this))
+			return;
+		if (_matchEnded)
+		{
+			CleanupCountdown(reenableInput: false);
+			return;
+		}
+
+		CleanupCountdown(reenableInput: true);
+	}
+
+	private void CleanupCountdown(bool reenableInput)
+	{
+		_countingDown = false;
+
+		if (IsInstanceValid(_countdownLayer))
+			_countdownLayer.Visible = false;
+
+		if (reenableInput)
+			SetPlayersInputEnabled(true);
 	}
 
 	private void CreateGoalHighlights()
