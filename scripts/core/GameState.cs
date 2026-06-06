@@ -30,14 +30,45 @@ public partial class GameState : Node
 	public GameMode Mode { get; set; } = GameMode.PlayerVsPlayer;
 	public AiDifficulty Difficulty { get; set; } = AiDifficulty.Normal;
 
+	// Match rules chosen on the main menu (also survive ResetMatch).
+	// ScoreLimit <= 0 means "no score limit"; MatchDurationSeconds <= 0 means "untimed".
+	public int ScoreLimit { get; set; } = DefaultScoreToWin;
+	public float MatchDurationSeconds { get; set; } = DefaultMatchDuration;
+
+	public bool HasScoreLimit => ScoreLimit > 0;
+	public bool IsTimed => MatchDurationSeconds > 0f;
+
 	public const float DefaultMatchDuration = 90f;
-	public const int ScoreToWin = 5;
+	public const int DefaultScoreToWin = 5;
+
+	private const string SettingsPath = "user://settings.cfg";
+
+	public override void _Ready()
+	{
+		// Restore the last-used match settings (autoload, runs once at startup).
+		var config = new ConfigFile();
+		if (config.Load(SettingsPath) != Error.Ok)
+			return; // no file yet -> keep the defaults already set on the properties
+
+		ScoreLimit = config.GetValue("match", "score_limit", DefaultScoreToWin).AsInt32();
+		MatchDurationSeconds = config.GetValue("match", "match_duration", DefaultMatchDuration).AsSingle();
+	}
+
+	// Persist the chosen match settings (mirrors AudioManager's volume persistence).
+	public void SaveMatchSettings(int scoreLimit, float matchDuration)
+	{
+		var config = new ConfigFile();
+		config.Load(SettingsPath); // ignore error: file may not exist yet
+		config.SetValue("match", "score_limit", scoreLimit);
+		config.SetValue("match", "match_duration", matchDuration);
+		config.Save(SettingsPath);
+	}
 
 	public void ResetMatch()
 	{
 		PlayerOneScore = 0;
 		PlayerTwoScore = 0;
-		MatchTimeLeft = DefaultMatchDuration;
+		MatchTimeLeft = IsTimed ? MatchDurationSeconds : 0f;
 		EmitSignal(SignalName.ScoreChanged, PlayerOneScore, PlayerTwoScore);
 		EmitSignal(SignalName.TimeChanged, MatchTimeLeft);
 	}
@@ -69,9 +100,15 @@ public partial class GameState : Node
 
 	public bool IsMatchOver()
 	{
-		return PlayerOneScore >= ScoreToWin ||
-			   PlayerTwoScore >= ScoreToWin ||
-			   MatchTimeLeft <= 0f;
+		// Safety net: if both limits are off, never run forever (the menu coerces away from
+		// this, so MatchTimeLeft was seeded to a finite value when this case slips through).
+		if (!HasScoreLimit && !IsTimed)
+			return MatchTimeLeft <= 0f;
+
+		bool scoreReached = HasScoreLimit &&
+			(PlayerOneScore >= ScoreLimit || PlayerTwoScore >= ScoreLimit);
+		bool timeUp = IsTimed && MatchTimeLeft <= 0f;
+		return scoreReached || timeUp;
 	}
 
 	public string GetFinalScoreText()

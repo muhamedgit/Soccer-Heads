@@ -221,7 +221,9 @@ public partial class MatchController : Node2D
 		if (_matchEnded || _isResetting || _countingDown)
 			return;
 
-		_gameState.SetTimeLeft(_gameState.MatchTimeLeft - (float)delta);
+		// Only tick the clock for timed matches; an untimed match ends on score alone.
+		if (_gameState.IsTimed)
+			_gameState.SetTimeLeft(_gameState.MatchTimeLeft - (float)delta);
 
 		if (_gameState.IsMatchOver())
 			EndMatch();
