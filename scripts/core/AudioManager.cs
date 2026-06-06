@@ -4,6 +4,7 @@ public partial class AudioManager : Node
 {
 	private const string GameplayMusicPath = "res://Assets/Audio/gameplay_loop.wav";
 	private const string GoalScoredSoundPath = "res://Assets/Audio/goal_scored.wav";
+	private const string PerkSoundPath = "res://Assets/Audio/ball_hit.wav"; // reused short blip
 
 	private const string MusicBusName = "Music";
 	private const string SfxBusName = "Master";
@@ -12,11 +13,13 @@ public partial class AudioManager : Node
 
 	[Export] public float MusicVolumeDb = -24f;
 	[Export] public float GoalSfxVolumeDb = -5f;
+	[Export] public float PerkSfxVolumeDb = -6f;
 	[Export] public float FadeOutSeconds = 0.35f;
 	[Export] public double GoalSfxCooldownSeconds = 0.35;
 
 	private AudioStreamPlayer _musicPlayer;
 	private AudioStreamPlayer _goalSfxPlayer;
+	private AudioStreamPlayer _perkSfxPlayer;
 
 	private Tween _fadeTween;
 	private double _goalSfxCooldown;
@@ -27,6 +30,7 @@ public partial class AudioManager : Node
 
 		SetupMusicPlayer();
 		SetupGoalSfxPlayer();
+		SetupPerkSfxPlayer();
 		LoadVolume();
 	}
 
@@ -168,6 +172,39 @@ public partial class AudioManager : Node
 			_musicPlayer.VolumeDb = MusicVolumeDb;
 			GD.Print("Gameplay music stopped.");
 		}));
+	}
+
+	private void SetupPerkSfxPlayer()
+	{
+		_perkSfxPlayer = new AudioStreamPlayer();
+		_perkSfxPlayer.Name = "PerkSfxPlayer";
+		_perkSfxPlayer.Bus = SfxBusName;
+		_perkSfxPlayer.VolumeDb = PerkSfxVolumeDb;
+
+		AudioStream stream = ResourceLoader.Load<AudioStream>(PerkSoundPath);
+
+		if (stream == null)
+		{
+			GD.PushWarning($"Perk sound was not found at: {PerkSoundPath}");
+			return;
+		}
+
+		_perkSfxPlayer.Stream = stream;
+		AddChild(_perkSfxPlayer);
+	}
+
+	// A lower-pitched blip when a perk appears, a higher-pitched one when it is collected.
+	public void PlayPerkSpawnSound() => PlayPerkSfx(0.8f);
+	public void PlayPerkPickupSound() => PlayPerkSfx(1.4f);
+
+	private void PlayPerkSfx(float pitch)
+	{
+		if (_perkSfxPlayer == null || _perkSfxPlayer.Stream == null)
+			return;
+
+		_perkSfxPlayer.PitchScale = pitch;
+		_perkSfxPlayer.Stop();
+		_perkSfxPlayer.Play();
 	}
 
 	public void PlayGoalScoredSound()

@@ -33,6 +33,8 @@ public partial class MatchController : Node2D
 	private GoalTrigger _leftGoal;
 	private GoalTrigger _rightGoal;
 
+	private PerkManager _perkManager;
+
 	// Goal celebration shown on every goal: screen shake + centered banner, then fade before kickoff.
 	[Export] public float ShakeMagnitude = 18f;            // peak camera offset in px on the 2304x1536 viewport
 	[Export] public float ShakeDuration = 0.4f;            // ~0.3-0.5s per spec
@@ -96,6 +98,11 @@ public partial class MatchController : Node2D
 		ConfigureAiOpponent();
 		CreateCountdownOverlay();
 		CreateGoalCelebrationOverlay();
+
+		_perkManager = new PerkManager();
+		AddChild(_perkManager);
+		_perkManager.Initialize(this, _playerOne, _playerTwo, _ball, _shakeRng, _gameState);
+		_perkManager.StartSpawning();
 
 		// Lock input synchronously before the first physics frame so players cannot move
 		// before the countdown begins, then kick off the countdown once the tree is ready.
@@ -221,6 +228,9 @@ public partial class MatchController : Node2D
 		if (_matchEnded || _isResetting || _countingDown)
 			return;
 
+		// Advance perk spawning/expiry only during live play (this line is past the freeze guard).
+		_perkManager?.Tick((float)delta);
+
 		// Only tick the clock for timed matches; an untimed match ends on score alone.
 		if (_gameState.IsTimed)
 			_gameState.SetTimeLeft(_gameState.MatchTimeLeft - (float)delta);
@@ -244,6 +254,7 @@ public partial class MatchController : Node2D
 			_ball.AngularVelocity = 0f;
 		}
 
+		_perkManager?.ClearAll();
 		_sceneManager.GoToEndScreen();
 	}
 
@@ -256,6 +267,11 @@ public partial class MatchController : Node2D
 		_playerTwo.Velocity = Vector2.Zero;
 
 		_ball.ResetTo(_ballStartPosition);
+
+		// Clear active perks + any on-field pickup, and forget possession, so nothing carries
+		// across a goal.
+		_perkManager?.ClearAll();
+		_gameState.LastBallToucher = -1;
 
 		GD.Print("Match objects reset.");
 	}
