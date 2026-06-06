@@ -5,6 +5,7 @@ public partial class ScoreHud : CanvasLayer
 	private Label _playerOneScoreLabel;
 	private Label _playerTwoScoreLabel;
 	private Label _timerLabel;
+	private Control _timerPanel;
 	private GameState _gameState;
 	private int _lastShownSeconds = -1;
 
@@ -13,7 +14,11 @@ public partial class ScoreHud : CanvasLayer
 		_playerOneScoreLabel = GetNode<Label>("HudRoot/ScorePanel/ScoreRow/PlayerOneScore");
 		_playerTwoScoreLabel = GetNode<Label>("HudRoot/ScorePanel/ScoreRow/PlayerTwoScore");
 		_timerLabel = GetNode<Label>("HudRoot/TimerPanel/TimerLabel");
+		_timerPanel = GetNode<PanelContainer>("HudRoot/TimerPanel");
 		_gameState = GetNode<GameState>("/root/GameState");
+
+		// Hide the timer entirely for an untimed match.
+		_timerPanel.Visible = _gameState.IsTimed;
 
 		if (_gameState.Mode == GameState.GameMode.PlayerVsAi)
 		{
@@ -46,6 +51,10 @@ public partial class ScoreHud : CanvasLayer
 
 	private void UpdateTime(float secondsLeft)
 	{
+		// Untimed match: the panel is hidden, so ignore the stray TimeChanged emit from ResetMatch.
+		if (!_gameState.IsTimed)
+			return;
+
 		// The display only changes once per second, so skip redundant per-frame updates.
 		int wholeSeconds = Mathf.FloorToInt(Mathf.Max(0f, secondsLeft));
 		if (wholeSeconds == _lastShownSeconds)
