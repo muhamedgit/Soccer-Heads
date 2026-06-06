@@ -25,6 +25,10 @@ public partial class GameState : Node
 	public int PlayerTwoScore { get; private set; }
 	public float MatchTimeLeft { get; private set; }
 
+	// Index (0 = Player 1, 1 = Player 2, -1 = nobody yet) of the last player to touch the ball.
+	// Drives which player a ball-collected perk is applied to.
+	public int LastBallToucher { get; set; } = -1;
+
 	// Chosen on the main menu and kept across scene changes (this is an autoload).
 	// ResetMatch deliberately leaves these untouched.
 	public GameMode Mode { get; set; } = GameMode.PlayerVsPlayer;
@@ -68,6 +72,7 @@ public partial class GameState : Node
 	{
 		PlayerOneScore = 0;
 		PlayerTwoScore = 0;
+		LastBallToucher = -1;
 		MatchTimeLeft = IsTimed ? MatchDurationSeconds : 0f;
 		EmitSignal(SignalName.ScoreChanged, PlayerOneScore, PlayerTwoScore);
 		EmitSignal(SignalName.TimeChanged, MatchTimeLeft);

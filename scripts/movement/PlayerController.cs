@@ -44,6 +44,9 @@ public partial class PlayerController : CharacterBody2D
 	private bool _wasOnFloor;
 	private RigidBody2D _ballInContact;
 
+	private GameState _gameState;
+	private int _playerIndex;
+
 	private AiController _aiBrain;
 	private RigidBody2D _aiBall;
 	private int _aiAttackDir = -1;
@@ -63,6 +66,9 @@ public partial class PlayerController : CharacterBody2D
 		UpDirection = Vector2.Up;
 		FloorMaxAngle = Mathf.DegToRad(50f);
 		FloorSnapLength = 8f;
+
+		_gameState = GetNodeOrNull<GameState>("/root/GameState");
+		_playerIndex = DetectPlayerIndex() - 1; // 0 = Player 1, 1 = Player 2
 
 		SetupPlaceholderSprite();
 	}
@@ -108,7 +114,13 @@ public partial class PlayerController : CharacterBody2D
 			ApplyKickImpulse(touchedBall);
 
 		if (touchedBall != null)
+		{
 			ApplyContinuousPush(touchedBall);
+
+			// Record possession so a perk the ball collects is applied to the last toucher.
+			if (_gameState != null)
+				_gameState.LastBallToucher = _playerIndex;
+		}
 
 		_ballInContact = touchedBall;
 
