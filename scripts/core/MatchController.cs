@@ -16,11 +16,38 @@ public partial class MatchController : Node2D
 	private CanvasLayer _countdownLayer;
 	private Label _countdownLabel;
 
+	// Goal celebration: screen shake (via a code-built Camera2D) + a centered "GOAL!" banner.
+	private Camera2D _camera;
+	private readonly RandomNumberGenerator _shakeRng = new RandomNumberGenerator();
+	private float _shakeTimeLeft;
+	private float _shakeDuration;
+	private float _shakeMagnitude;
+
+	private CanvasLayer _goalBannerLayer;
+	private Control _goalBannerRoot;
+	private Label _goalBannerTitle;
+	private Label _goalBannerScorer;
+	private Label _goalBannerScore;
+	private Tween _goalBannerTween;
+
 	private GoalTrigger _leftGoal;
 	private GoalTrigger _rightGoal;
 
-	// Short "goal feedback" beat after the snap-back, before the kickoff countdown starts.
-	[Export] public float GoalResetDelay = 0.4f;
+	// Goal celebration shown on every goal: screen shake + centered banner, then fade before kickoff.
+	[Export] public float ShakeMagnitude = 18f;            // peak camera offset in px on the 2304x1536 viewport
+	[Export] public float ShakeDuration = 0.4f;            // ~0.3-0.5s per spec
+	[Export] public float GoalCelebrationDuration = 1.0f;  // opaque banner hold before it fades
+	[Export] public float BannerFadeSeconds = 0.3f;        // banner modulate:a 1 -> 0
+	[Export] public int CelebrationCameraCenterX = 1152;   // viewport_width / 2
+	[Export] public int CelebrationCameraCenterY = 768;    // viewport_height / 2
+	[Export] public int BannerTitleFontSize = 220;
+	[Export] public int BannerScorerFontSize = 110;
+	[Export] public int BannerScoreFontSize = 180;
+	[Export] public Color BannerTitleColor = Palette.ArcadeYellow;
+	[Export] public Color BannerScorerOneColor = Palette.TeamBlue;   // Player 1 scored
+	[Export] public Color BannerScorerTwoColor = Palette.TeamRed;    // Player 2 / Computer scored
+	[Export] public Color BannerScoreColor = Palette.UiText;
+	[Export] public int BannerCanvasLayer = 3;             // above HUD (1) and countdown (2)
 
 	// Kickoff countdown shown at match start and after every goal.
 	[Export] public int CountdownStartNumber = 3;
@@ -64,9 +91,11 @@ public partial class MatchController : Node2D
 
 		ResetMatchObjects();
 		CreateGoalHighlights();
+		CreateMatchCamera();
 		ConnectGoalTriggers();
 		ConfigureAiOpponent();
 		CreateCountdownOverlay();
+		CreateGoalCelebrationOverlay();
 
 		// Lock input synchronously before the first physics frame so players cannot move
 		// before the countdown begins, then kick off the countdown once the tree is ready.
@@ -114,21 +143,39 @@ public partial class MatchController : Node2D
 		else
 			_gameState.AddGoalForPlayerTwo();
 
-		if (_gameState.IsMatchOver())
-		{
-			EndMatch();
-			return;
-		}
+		// Capture the match-over state after the goal is counted, but celebrate either way.
+		bool matchOver = _gameState.IsMatchOver();
 
+		// Freeze the clock and lock input for the whole celebration (winning goal included).
 		_isResetting = true;
 		SetPlayersInputEnabled(false);
 		ResetMatchObjects();
 
-		// Short feedback beat with everything snapped back to kickoff positions.
-		if (GoalResetDelay > 0f)
-			await ToSignal(GetTree().CreateTimer(GoalResetDelay), SceneTreeTimer.SignalName.Timeout);
+		// Punchy feedback: shake the view and show the centered "GOAL!" banner with the new score.
+		TriggerScreenShake();
+		ShowGoalBanner(scoringPlayerIndex);
 
-		if (!IsInstanceValid(this) || _matchEnded)
+		if (GoalCelebrationDuration > 0f)
+			await ToSignal(GetTree().CreateTimer(GoalCelebrationDuration), SceneTreeTimer.SignalName.Timeout);
+
+		if (!IsInstanceValid(this))
+			return;
+
+		// Fade the banner fully out before anything else, so it never overlaps the countdown.
+		await FadeOutGoalBannerAsync();
+
+		if (!IsInstanceValid(this))
+			return;
+
+		// A match-winning goal celebrates first, then goes to the end screen.
+		if (matchOver)
+		{
+			HideGoalBanner();
+			EndMatch();
+			return;
+		}
+
+		if (_matchEnded)
 			return;
 
 		// Re-arm the goals before play resumes; the ball is centred and motionless here.
@@ -139,7 +186,32 @@ public partial class MatchController : Node2D
 		// frozen throughout: _isResetting remains true until the countdown takes over the
 		// freeze via _countingDown, so at least one freeze flag is set the whole transition.
 		await RunKickoffCountdownAsync();
+
+		if (!IsInstanceValid(this))
+			return;
+
 		_isResetting = false;
+	}
+
+	public override void _Process(double delta)
+	{
+		if (_camera == null)
+			return;
+
+		if (_shakeTimeLeft > 0f)
+		{
+			_shakeTimeLeft -= (float)delta;
+			float falloff = _shakeDuration > 0f ? Mathf.Clamp(_shakeTimeLeft / _shakeDuration, 0f, 1f) : 0f;
+			float amp = _shakeMagnitude * falloff;
+			_camera.Offset = new Vector2(
+				_shakeRng.RandfRange(-1f, 1f) * amp,
+				_shakeRng.RandfRange(-1f, 1f) * amp);
+		}
+		else if (_camera.Offset != Vector2.Zero)
+		{
+			// Return to pixel-identical framing once the shake is over.
+			_camera.Offset = Vector2.Zero;
+		}
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -293,6 +365,133 @@ public partial class MatchController : Node2D
 
 		if (reenableInput)
 			SetPlayersInputEnabled(true);
+	}
+
+	private void CreateMatchCamera()
+	{
+		// Centre the camera on the viewport so framing matches the previous camera-less view.
+		// Only its Offset is shaken (render-only); Position never changes, so gameplay/goal
+		// trigger world coordinates are untouched.
+		GetNodeOrNull<Camera2D>("MatchCamera")?.QueueFree();
+
+		_camera = new Camera2D
+		{
+			Name = "MatchCamera",
+			Position = new Vector2(CelebrationCameraCenterX, CelebrationCameraCenterY),
+			Zoom = Vector2.One,
+			AnchorMode = Camera2D.AnchorModeEnum.DragCenter
+		};
+		AddChild(_camera);
+		_camera.MakeCurrent();
+		_shakeRng.Randomize();
+	}
+
+	private void TriggerScreenShake()
+	{
+		_shakeDuration = ShakeDuration;
+		_shakeTimeLeft = ShakeDuration;
+		_shakeMagnitude = ShakeMagnitude;
+	}
+
+	private void CreateGoalCelebrationOverlay()
+	{
+		GetNodeOrNull<CanvasLayer>("GoalCelebrationLayer")?.QueueFree();
+
+		_goalBannerLayer = new CanvasLayer
+		{
+			Name = "GoalCelebrationLayer",
+			Layer = BannerCanvasLayer,
+			Visible = false
+		};
+		AddChild(_goalBannerLayer);
+
+		// Full-rect root whose Modulate drives the fade; ignore mouse so pause buttons stay clickable.
+		_goalBannerRoot = new Control { Name = "GoalBannerRoot", MouseFilter = Control.MouseFilterEnum.Ignore };
+		_goalBannerRoot.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		_goalBannerLayer.AddChild(_goalBannerRoot);
+
+		var box = new VBoxContainer
+		{
+			Name = "GoalBannerBox",
+			MouseFilter = Control.MouseFilterEnum.Ignore,
+			Alignment = BoxContainer.AlignmentMode.Center
+		};
+		box.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		box.AddThemeConstantOverride("separation", 16);
+		_goalBannerRoot.AddChild(box);
+
+		_goalBannerTitle = CreateBannerLabel("GoalBannerTitle", BannerTitleFontSize, BannerTitleColor);
+		_goalBannerTitle.Text = "GOAL!";
+		box.AddChild(_goalBannerTitle);
+
+		_goalBannerScorer = CreateBannerLabel("GoalBannerScorer", BannerScorerFontSize, BannerScorerOneColor);
+		box.AddChild(_goalBannerScorer);
+
+		_goalBannerScore = CreateBannerLabel("GoalBannerScore", BannerScoreFontSize, BannerScoreColor);
+		box.AddChild(_goalBannerScore);
+	}
+
+	private Label CreateBannerLabel(string nodeName, int fontSize, Color color)
+	{
+		var label = new Label
+		{
+			Name = nodeName,
+			HorizontalAlignment = HorizontalAlignment.Center,
+			MouseFilter = Control.MouseFilterEnum.Ignore
+		};
+		Palette.ApplyReadableLabel(label, fontSize);
+		label.AddThemeColorOverride("font_color", color);
+		return label;
+	}
+
+	private void ShowGoalBanner(int scoringPlayerIndex)
+	{
+		if (_goalBannerLayer == null)
+			return;
+
+		if (_goalBannerTween != null && _goalBannerTween.IsValid())
+			_goalBannerTween.Kill();
+		_goalBannerTween = null;
+
+		bool playerOneScored = scoringPlayerIndex == 0;
+		string scorer = playerOneScored
+			? "PLAYER 1"
+			: (_gameState.Mode == GameState.GameMode.PlayerVsAi ? "COMPUTER" : "PLAYER 2");
+
+		_goalBannerScorer.Text = scorer;
+		_goalBannerScorer.AddThemeColorOverride(
+			"font_color", playerOneScored ? BannerScorerOneColor : BannerScorerTwoColor);
+		_goalBannerScore.Text = _gameState.GetFinalScoreText();
+
+		_goalBannerRoot.Modulate = new Color(1f, 1f, 1f, 1f);
+		_goalBannerLayer.Visible = true;
+	}
+
+	private async Task FadeOutGoalBannerAsync()
+	{
+		if (_goalBannerLayer == null || !_goalBannerLayer.Visible)
+			return;
+
+		_goalBannerTween = CreateTween();
+		_goalBannerTween.TweenProperty(_goalBannerRoot, "modulate:a", 0f, BannerFadeSeconds);
+		await ToSignal(_goalBannerTween, Tween.SignalName.Finished);
+
+		if (!IsInstanceValid(this))
+			return;
+
+		HideGoalBanner();
+	}
+
+	private void HideGoalBanner()
+	{
+		if (_goalBannerTween != null && _goalBannerTween.IsValid())
+			_goalBannerTween.Kill();
+		_goalBannerTween = null;
+
+		if (IsInstanceValid(_goalBannerLayer))
+			_goalBannerLayer.Visible = false;
+		if (IsInstanceValid(_goalBannerRoot))
+			_goalBannerRoot.Modulate = new Color(1f, 1f, 1f, 1f);
 	}
 
 	private void CreateGoalHighlights()
