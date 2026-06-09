@@ -97,17 +97,28 @@ public static class PlayerSpriteFactory
 
 		Color bootBody = new Color(0.14f, 0.11f, 0.10f);
 		Color bootSole = new Color(0.88f, 0.84f, 0.76f);
-		float r = height * 0.40f;
+		Color laceStrip = new Color(1f, 1f, 1f, 0.55f);
+		float r = height * 0.38f;
 
+		// Outline shell + dark body
 		DrawRoundedRect(image, 0, 0, (float)width, (float)height, r, outlineColor);
 		DrawRoundedRect(image, (float)outline, (float)outline,
 			width - outline * 2f, height - outline * 2f, r, bootBody);
 
-		int soleH = Math.Max(3, height / 5);
+		// Thick sole strip at the bottom (football-shoe cleat ridge)
+		int soleH = Math.Max(5, height / 4);
 		DrawRoundedRect(image,
 			(float)outline, height - outline - soleH,
 			width - outline * 2f, (float)soleH,
-			r * 0.35f, bootSole);
+			r * 0.30f, bootSole);
+
+		// Thin lace highlight across the upper
+		int laceH = Math.Max(2, height / 8);
+		int laceY = outline + (height - outline * 2 - soleH) / 3;
+		DrawRoundedRect(image,
+			outline * 2f, (float)laceY,
+			width - outline * 4f, (float)laceH,
+			r * 0.20f, laceStrip);
 
 		return ImageTexture.CreateFromImage(image);
 	}

@@ -56,7 +56,9 @@ public partial class PlayerController : CharacterBody2D
 	private float _kickActiveLeft;   // > 0 while the kick boost window is open
 	private float _kickCooldownLeft; // > 0 while a new kick is blocked
 	private int   _kickDir = 1;      // +1 = P1 kicks right, -1 = P2 kicks left (set in CreateFoot)
-	private Sprite2D _footSprite;
+	private Sprite2D    _footSprite;
+	private Area2D      _footArea;
+	private RigidBody2D _footBall;   // ball currently overlapping the foot area (null if none)
 	private float _footAngle;        // current arc angle in radians (π/2 = 6-o'clock rest)
 
 	private GameState _gameState;
@@ -126,6 +128,9 @@ public partial class PlayerController : CharacterBody2D
 			_kickActiveLeft   = KickActiveSeconds;
 			_kickCooldownLeft = KickCooldownSeconds;
 			kickedThisFrame = true;
+			// Ball was already inside the foot area when kick was pressed.
+			if (_footBall != null)
+				ApplyKickImpulse(_footBall);
 		}
 
 		var v = Velocity;
@@ -346,9 +351,10 @@ public partial class PlayerController : CharacterBody2D
 	private void CreateFoot()
 	{
 		GetNodeOrNull<Sprite2D>("FootSprite")?.QueueFree();
+		GetNodeOrNull<Area2D>("FootArea")?.QueueFree();
 
 		int footW = Math.Max(48, PlaceholderWidth  / 3);
-		int footH = Math.Max(16, PlaceholderHeight / 12);
+		int footH = Math.Max(20, PlaceholderHeight / 9); // taller = thicker shoe
 
 		_footSprite = new Sprite2D
 		{
@@ -359,13 +365,41 @@ public partial class PlayerController : CharacterBody2D
 		};
 		AddChild(_footSprite);
 
+		// Collision area follows the foot sprite so the ball can be kicked by the foot.
+		_footArea = new Area2D { Name = "FootArea" };
+		_footArea.CollisionLayer = 0;
+		_footArea.CollisionMask  = 1u << 1; // layer 2 = ball
+		_footArea.AddChild(new CollisionShape2D
+		{
+			Shape = new RectangleShape2D { Size = new Vector2(footW, footH) }
+		});
+		AddChild(_footArea);
+		_footArea.BodyEntered += OnFootBallEnter;
+		_footArea.BodyExited  += OnFootBallExit;
+
 		_kickDir   = (_playerIndex == 0) ? 1 : -1;
 		_footAngle = Mathf.Pi * 0.5f; // start at rest
 		UpdateFootTransform();
 	}
 
-	// Reposition the foot sprite on the head-boundary arc at the current _footAngle.
-	// Also rotates the texture so the toe always faces outward (away from head center).
+	private void OnFootBallEnter(Node body)
+	{
+		if (body is RigidBody2D rb && rb.IsInGroup("ball"))
+		{
+			_footBall = rb;
+			if (_kickActiveLeft > 0f)
+				ApplyKickImpulse(rb);
+		}
+	}
+
+	private void OnFootBallExit(Node body)
+	{
+		if (body is RigidBody2D rb && rb == _footBall)
+			_footBall = null;
+	}
+
+	// Reposition the foot sprite (and its collision area) on the head-boundary arc.
+	// Toe always faces the kick direction so the foot looks flat at rest and špic-first on kick.
 	private void UpdateFootTransform()
 	{
 		if (_footSprite == null) return;
@@ -376,11 +410,21 @@ public partial class PlayerController : CharacterBody2D
 		float headCenterLocalY = 8f - PlaceholderHeight * 0.21f; // ≈ -46 for 256px
 		float armRadius        = PlaceholderHeight * 0.40f;       // ≈ 102, outside head boundary
 
-		_footSprite.Position = new Vector2(
+		var pos = new Vector2(
 			armRadius * Mathf.Cos(_footAngle),
 			headCenterLocalY + armRadius * Mathf.Sin(_footAngle)
 		);
-		_footSprite.Rotation = _footAngle;
+		// Toe always points in the attack direction: right (0°) for P1, left (180°) for P2.
+		float rot = _kickDir > 0 ? 0f : Mathf.Pi;
+
+		_footSprite.Position = pos;
+		_footSprite.Rotation = rot;
+
+		if (_footArea != null)
+		{
+			_footArea.Position = pos;
+			_footArea.Rotation = rot;
+		}
 	}
 
 	private int DetectPlayerIndex()
