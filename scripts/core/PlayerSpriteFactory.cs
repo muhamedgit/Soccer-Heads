@@ -15,6 +15,12 @@ public static class PlayerSpriteFactory
 		in ClubDatabase.Club club, in ClubDatabase.PlayerVariant variant,
 		Color outlineColor, int outline)
 	{
+		// Optional SVG head (clubs/crest pattern): if the variant points to an imported SVG,
+		// use it directly; otherwise fall through to the procedural head below.
+		Texture2D svgHead = TryLoadSvg(variant.HeadPath);
+		if (svgHead != null)
+			return svgHead;
+
 		Image image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
 		image.Fill(Colors.Transparent);
 
@@ -32,10 +38,31 @@ public static class PlayerSpriteFactory
 		return ImageTexture.CreateFromImage(image);
 	}
 
+	// True when this variant has a usable SVG head asset (so callers can size collision to it).
+	public static bool HasSvgHead(in ClubDatabase.PlayerVariant variant)
+		=> TryLoadSvg(variant.HeadPath) != null;
+
+	// Loads an imported SVG texture from a res:// path, or null if absent/not yet imported.
+	private static Texture2D TryLoadSvg(string path)
+	{
+		if (string.IsNullOrEmpty(path))
+			return null;
+		try
+		{
+			return ResourceLoader.Load<Texture2D>(path);
+		}
+		catch { return null; }
+	}
+
 	// Square head thumbnail for the selection grid.
 	public static Texture2D BuildHeadThumbnail(
 		int size, in ClubDatabase.Club club, in ClubDatabase.PlayerVariant variant)
 	{
+		// Use the SVG head in the picker too, so the grid matches the in-match avatar.
+		Texture2D svgHead = TryLoadSvg(variant.HeadPath);
+		if (svgHead != null)
+			return svgHead;
+
 		Image image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
 		image.Fill(Colors.Transparent);
 
@@ -107,15 +134,9 @@ public static class PlayerSpriteFactory
 	// Club emblem: tries SVG first, falls back to procedural disc.
 	public static Texture2D BuildEmblem(int size, in ClubDatabase.Club club)
 	{
-		if (!string.IsNullOrEmpty(club.CrestPath))
-		{
-			try
-			{
-				var svgTex = ResourceLoader.Load<Texture2D>(club.CrestPath);
-				if (svgTex != null) return svgTex;
-			}
-			catch { }
-		}
+		Texture2D svgTex = TryLoadSvg(club.CrestPath);
+		if (svgTex != null)
+			return svgTex;
 
 		return BuildProceduralEmblem(size, club);
 	}

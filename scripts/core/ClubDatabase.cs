@@ -12,12 +12,14 @@ public static class ClubDatabase
 		public readonly string Name;
 		public readonly Color SkinColor;
 		public readonly Color HairColor;
+		public readonly string HeadPath; // optional res:// SVG head; null = draw procedurally
 
-		public PlayerVariant(string name, Color skin, Color hair)
+		public PlayerVariant(string name, Color skin, Color hair, string headPath = null)
 		{
 			Name = name;
 			SkinColor = skin;
 			HairColor = hair;
+			HeadPath = headPath;
 		}
 	}
 

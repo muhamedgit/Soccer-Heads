@@ -340,19 +340,6 @@ public partial class PlayerController : CharacterBody2D
 		sprite.Position = Vector2.Zero;
 		sprite.ZIndex = 10;
 
-		// Match the body collider to the head graphic (the only visible part now).
-		// Mirrors the head rect from PlayerSpriteFactory.BuildPlayerTexture: hx=14, hy=8,
-		// hw=width-28, hh=height*0.58. The sprite is centered, so convert to local space.
-		if (collision != null)
-		{
-			float headW       = PlaceholderWidth - 28f;
-			float headH       = PlaceholderHeight * 0.58f;
-			float headCenterY = (8f + headH / 2f) - PlaceholderHeight / 2f;
-			collision.Scale    = Vector2.One; // ignore the scene's (6,4) scale on this node
-			collision.Shape    = new RectangleShape2D { Size = new Vector2(headW, headH) };
-			collision.Position = new Vector2(0f, headCenterY);
-		}
-
 		int playerIndex = DetectPlayerIndex();
 
 		// Use the club + player chosen on the selection screen; fall back to the first club/player
@@ -377,6 +364,29 @@ public partial class PlayerController : CharacterBody2D
 			OutlineColor,
 			Math.Max(OutlineThickness, 2)
 		);
+
+		// Size the collider to the visible sprite. For an SVG head the art fills its own
+		// canvas, so the collider matches the full texture; for the procedural head the art
+		// only occupies the top rounded-rect, so the collider matches that head rect.
+		if (collision != null)
+		{
+			collision.Scale = Vector2.One; // ignore the scene's (6,4) scale on this node
+
+			if (PlayerSpriteFactory.HasSvgHead(variant) && sprite.Texture != null)
+			{
+				collision.Shape    = new RectangleShape2D { Size = sprite.Texture.GetSize() };
+				collision.Position = Vector2.Zero;
+			}
+			else
+			{
+				// Mirrors PlayerSpriteFactory head rect: hx=14, hy=8, hw=w-28, hh=h*0.58.
+				float headW       = PlaceholderWidth - 28f;
+				float headH       = PlaceholderHeight * 0.58f;
+				float headCenterY = (8f + headH / 2f) - PlaceholderHeight / 2f;
+				collision.Shape    = new RectangleShape2D { Size = new Vector2(headW, headH) };
+				collision.Position = new Vector2(0f, headCenterY);
+			}
+		}
 	}
 
 	// Foot sprite that orbits the head center on a circular arc.
