@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Dark background -->
+  <circle cx="50" cy="50" r="48" fill="#212121"/>
+  <circle cx="50" cy="50" r="44" fill="#424242"/>
+  <!-- Dashed large circle (original size) -->
+  <circle cx="50" cy="50" r="30" fill="none" stroke="#757575" stroke-width="2.5" stroke-dasharray="5,3"/>
+  <!-- Small solid circle (shrunk player) -->
+  <circle cx="50" cy="50" r="14" fill="#BDBDBD"/>
+  <!-- Tiny head silhouette -->
+  <circle cx="50" cy="45" r="5"  fill="#424242"/>
+  <rect x="44" y="50" width="12" height="8" rx="3" fill="#424242"/>
+  <!-- Inward arrows -->
+  <polygon points="50,20 46,28 50,25 54,28" fill="#9E9E9E"/>
+  <polygon points="50,80 46,72 50,75 54,72" fill="#9E9E9E"/>
+  <polygon points="20,50 28,46 25,50 28,54" fill="#9E9E9E"/>
+  <polygon points="80,50 72,46 75,50 72,54" fill="#9E9E9E"/>
+</svg>

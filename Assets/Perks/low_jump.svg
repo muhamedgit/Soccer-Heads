@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Dark red background -->
+  <circle cx="50" cy="50" r="48" fill="#7B0000"/>
+  <circle cx="50" cy="50" r="44" fill="#D32F2F"/>
+  <!-- Down arrow (muted) -->
+  <polygon points="50,82 28,56 42,56 42,30 58,30 58,56 72,56" fill="#FFAAAA"/>
+  <!-- Red X over the up-jump -->
+  <line x1="26" y1="16" x2="74" y2="40" stroke="#FF1744" stroke-width="8" stroke-linecap="round"/>
+  <line x1="74" y1="16" x2="26" y2="40" stroke="#FF1744" stroke-width="8" stroke-linecap="round"/>
+</svg>

@@ -3,6 +3,7 @@ using System;
 
 // A pickup that sits on the pitch. When the BALL touches it, it emits PickedUp and frees itself
 // (the effect goes to whoever last touched the ball). Mirrors GoalTrigger's Area2D + lock pattern.
+// Renders using the SVG icon at IconPath when available; falls back to a coloured circle.
 public partial class PerkPickup : Area2D
 {
 	[Signal]
@@ -13,20 +14,22 @@ public partial class PerkPickup : Area2D
 	private PerkType _type;
 	private float _radius = 40f;
 	private Color _color = Colors.White;
+	private string _iconPath;
 	private bool _locked;
 
-	public void Configure(PerkType type, Color color, float radius)
+	public void Configure(PerkType type, Color color, float radius, string iconPath = null)
 	{
 		_type = type;
 		_color = color;
 		_radius = radius;
+		_iconPath = iconPath;
 	}
 
 	public override void _Ready()
 	{
 		Monitoring = true;
 		CollisionLayer = 1u << 5; // layer 6 (perks)
-		CollisionMask = 1u << 1;  // detect the ball (layer 2)
+		CollisionMask  = 1u << 1; // detect the ball (layer 2)
 
 		var shape = new CollisionShape2D { Shape = new CircleShape2D { Radius = _radius } };
 		AddChild(shape);
@@ -52,7 +55,24 @@ public partial class PerkPickup : Area2D
 
 	private Texture2D BuildTexture()
 	{
-		int r = Mathf.CeilToInt(_radius);
+		// Try the SVG icon first (available after editor imports the asset)
+		if (!string.IsNullOrEmpty(_iconPath))
+		{
+			try
+			{
+				var svgTex = ResourceLoader.Load<Texture2D>(_iconPath);
+				if (svgTex != null)
+					return svgTex;
+			}
+			catch { }
+		}
+
+		return BuildCircleTexture();
+	}
+
+	private Texture2D BuildCircleTexture()
+	{
+		int r    = Mathf.CeilToInt(_radius);
 		int size = (r + Outline) * 2;
 		Vector2 center = new Vector2(size / 2f, size / 2f);
 
@@ -70,7 +90,7 @@ public partial class PerkPickup : Area2D
 	private static void DrawFilledCircle(Image image, Vector2 center, float radius, Color color)
 	{
 		int minX = Math.Max(0, Mathf.FloorToInt(center.X - radius));
-		int maxX = Math.Min(image.GetWidth() - 1, Mathf.CeilToInt(center.X + radius));
+		int maxX = Math.Min(image.GetWidth()  - 1, Mathf.CeilToInt(center.X + radius));
 		int minY = Math.Max(0, Mathf.FloorToInt(center.Y - radius));
 		int maxY = Math.Min(image.GetHeight() - 1, Mathf.CeilToInt(center.Y + radius));
 
