@@ -88,6 +88,30 @@ public static class PlayerSpriteFactory
 		return ImageTexture.CreateFromImage(image);
 	}
 
+	// Boot texture for the kick foot. Toe points RIGHT in its natural orientation (0° rotation).
+	// The outline and body use DrawRoundedRect; a lighter sole strip runs along the bottom.
+	public static Texture2D BuildFootTexture(int width, int height, Color outlineColor, int outline)
+	{
+		Image image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
+		image.Fill(Colors.Transparent);
+
+		Color bootBody = new Color(0.14f, 0.11f, 0.10f);
+		Color bootSole = new Color(0.88f, 0.84f, 0.76f);
+		float r = height * 0.40f;
+
+		DrawRoundedRect(image, 0, 0, (float)width, (float)height, r, outlineColor);
+		DrawRoundedRect(image, (float)outline, (float)outline,
+			width - outline * 2f, height - outline * 2f, r, bootBody);
+
+		int soleH = Math.Max(3, height / 5);
+		DrawRoundedRect(image,
+			(float)outline, height - outline - soleH,
+			width - outline * 2f, (float)soleH,
+			r * 0.35f, bootSole);
+
+		return ImageTexture.CreateFromImage(image);
+	}
+
 	// Club emblem: tries SVG first, falls back to procedural disc.
 	public static Texture2D BuildEmblem(int size, in ClubDatabase.Club club)
 	{
