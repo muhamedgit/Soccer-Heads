@@ -347,8 +347,8 @@ public partial class PlayerController : CharacterBody2D
 	{
 		GetNodeOrNull<Sprite2D>("FootSprite")?.QueueFree();
 
-		int footW = Math.Max(28, PlaceholderWidth  / 5);
-		int footH = Math.Max(10, PlaceholderHeight / 20);
+		int footW = Math.Max(48, PlaceholderWidth  / 3);
+		int footH = Math.Max(16, PlaceholderHeight / 12);
 
 		_footSprite = new Sprite2D
 		{
@@ -374,7 +374,7 @@ public partial class PlayerController : CharacterBody2D
 		// Matches PlayerSpriteFactory: hy=8, hh=PlaceholderHeight*0.58 → cy_image=8+hh/2
 		// Node Y = cy_image - PlaceholderHeight/2 = 8 + PlaceholderHeight*0.29 - PlaceholderHeight*0.5
 		float headCenterLocalY = 8f - PlaceholderHeight * 0.21f; // ≈ -46 for 256px
-		float armRadius        = PlaceholderHeight * 0.30f;       // ≈ 77, near head boundary
+		float armRadius        = PlaceholderHeight * 0.40f;       // ≈ 102, outside head boundary
 
 		_footSprite.Position = new Vector2(
 			armRadius * Mathf.Cos(_footAngle),
