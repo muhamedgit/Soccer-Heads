@@ -27,6 +27,8 @@ public partial class MainMenu : Control
 	{
 		GD.Print("MainMenu script loaded.");
 
+		UiTheme.Apply(this);
+
 		_playButton = GetNode<Button>("CenterContainer/VBoxContainer/PlayButton");
 		_modeButton = GetNode<Button>("CenterContainer/VBoxContainer/ModeButton");
 		_difficultyButton = GetNode<Button>("CenterContainer/VBoxContainer/DifficultyButton");

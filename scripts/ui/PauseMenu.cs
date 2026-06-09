@@ -18,6 +18,7 @@ public partial class PauseMenu : CanvasLayer
 		ProcessMode = ProcessModeEnum.Always;
 
 		_overlay = GetNode<Control>("Overlay");
+		UiTheme.Apply(_overlay, withBackdrop: false);
 		_resumeButton = GetNode<Button>("Overlay/CenterContainer/VBoxContainer/ResumeButton");
 		_restartButton = GetNode<Button>("Overlay/CenterContainer/VBoxContainer/RestartButton");
 		_mainMenuButton = GetNode<Button>("Overlay/CenterContainer/VBoxContainer/MainMenuButton");

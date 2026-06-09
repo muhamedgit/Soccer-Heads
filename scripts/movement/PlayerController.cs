@@ -355,37 +355,19 @@ public partial class PlayerController : CharacterBody2D
 		ClubDatabase.Club club = ClubDatabase.GetClub(clubIndex);
 		ClubDatabase.PlayerVariant variant = ClubDatabase.GetPlayer(clubIndex, variantIndex);
 
-		sprite.Texture = PlayerSpriteFactory.BuildPlayerTexture(
-			Math.Max(PlaceholderWidth, 48),
-			Math.Max(PlaceholderHeight, 64),
-			playerIndex,
-			club,
-			variant,
-			OutlineColor,
-			Math.Max(OutlineThickness, 2)
-		);
+		sprite.Texture = PlayerSpriteFactory.BuildPlayerTexture(variant);
 
-		// Size the collider to the visible sprite. For an SVG head the art fills its own
-		// canvas, so the collider matches the full texture; for the procedural head the art
-		// only occupies the top rounded-rect, so the collider matches that head rect.
+		// Match the collider to the head drawn in the SVG. The head art sits in the top
+		// region of the 192x256 canvas (x:14..178, y:8..156), so the collider mirrors that
+		// rect rather than the whole texture (which has transparent space below the head).
 		if (collision != null)
 		{
-			collision.Scale = Vector2.One; // ignore the scene's (6,4) scale on this node
-
-			if (PlayerSpriteFactory.HasSvgHead(variant) && sprite.Texture != null)
-			{
-				collision.Shape    = new RectangleShape2D { Size = sprite.Texture.GetSize() };
-				collision.Position = Vector2.Zero;
-			}
-			else
-			{
-				// Mirrors PlayerSpriteFactory head rect: hx=14, hy=8, hw=w-28, hh=h*0.58.
-				float headW       = PlaceholderWidth - 28f;
-				float headH       = PlaceholderHeight * 0.58f;
-				float headCenterY = (8f + headH / 2f) - PlaceholderHeight / 2f;
-				collision.Shape    = new RectangleShape2D { Size = new Vector2(headW, headH) };
-				collision.Position = new Vector2(0f, headCenterY);
-			}
+			float headW       = PlaceholderWidth - 28f;
+			float headH       = PlaceholderHeight * 0.58f;
+			float headCenterY = (8f + headH / 2f) - PlaceholderHeight / 2f;
+			collision.Scale    = Vector2.One; // ignore the scene's (6,4) scale on this node
+			collision.Shape    = new RectangleShape2D { Size = new Vector2(headW, headH) };
+			collision.Position = new Vector2(0f, headCenterY);
 		}
 	}
 

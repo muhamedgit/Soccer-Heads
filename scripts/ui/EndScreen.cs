@@ -14,6 +14,8 @@ public partial class EndScreen : Control
 	{
 		GD.Print("EndScreen script loaded.");
 
+		UiTheme.Apply(this);
+
 		_winnerLabel = GetNode<Label>("MarginContainer/VBoxContainer/Panel/Content/WinnerLabel");
 		_scoreLabel = GetNode<Label>("MarginContainer/VBoxContainer/Panel/Content/ScoreLabel");
 		_restartButton = GetNode<Button>("MarginContainer/VBoxContainer/ButtonRow/RestartButton");
