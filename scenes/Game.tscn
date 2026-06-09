@@ -91,7 +91,7 @@ shape = SubResource("CircleShape2D_ball1")
 
 [node name="Player1" type="CharacterBody2D" parent="." unique_id=1614461935]
 position = Vector2(650, 995)
-collision_mask = 15
+collision_mask = 14
 script = ExtResource("2_cpr0p")
 
 [node name="Sprite2D" type="Sprite2D" parent="Player1" unique_id=2090077016]
@@ -103,7 +103,7 @@ shape = SubResource("CapsuleShape2D_s0nni")
 
 [node name="Player2" type="CharacterBody2D" parent="." unique_id=2088789380]
 position = Vector2(1733, 988)
-collision_mask = 15
+collision_mask = 14
 script = ExtResource("2_cpr0p")
 LeftAction = "Player2_Left"
 RightAction = "Player2_Right"
