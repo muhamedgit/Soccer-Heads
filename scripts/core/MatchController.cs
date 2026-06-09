@@ -226,12 +226,36 @@ public partial class MatchController : Node2D
 		}
 	}
 
+	// Ball is considered out of bounds if it travels more than 400 px outside the
+	// 2304x1536 viewport in any direction. On escape it is silently teleported back
+	// to the kickoff spot — no goal is scored, no countdown is triggered.
+	private const float OobMargin = 400f;
+	private const float OobMinX = -OobMargin;
+	private const float OobMaxX = 2304f + OobMargin;
+	private const float OobMinY = -OobMargin;
+	private const float OobMaxY = 1536f + OobMargin;
+
+	private void CheckBallOutOfBounds()
+	{
+		if (_ball == null || !IsInstanceValid(_ball))
+			return;
+
+		var pos = _ball.GlobalPosition;
+		if (pos.X < OobMinX || pos.X > OobMaxX || pos.Y < OobMinY || pos.Y > OobMaxY)
+		{
+			GD.PushWarning($"Ball escaped the field at {pos} — resetting to kickoff.");
+			_ball.ResetTo(_ballStartPosition);
+		}
+	}
+
 	public override void _PhysicsProcess(double delta)
 	{
 		// Freeze the clock while the match is over, during the post-goal reset,
 		// or while the kickoff countdown is running.
 		if (_matchEnded || _isResetting || _countingDown)
 			return;
+
+		CheckBallOutOfBounds();
 
 		// Advance perk spawning/expiry only during live play (this line is past the freeze guard).
 		_perkManager?.Tick((float)delta);
