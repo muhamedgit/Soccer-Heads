@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <clipPath id="juv_clip"><circle cx="100" cy="100" r="90"/></clipPath>
+  </defs>
+  <!-- Outer border gold -->
+  <circle cx="100" cy="100" r="98" fill="#F4A300"/>
+  <!-- Left half black, right half white (Juventus stripes) -->
+  <rect x="10" y="10" width="90" height="180" fill="#000000" clip-path="url(#juv_clip)"/>
+  <rect x="100" y="10" width="90" height="180" fill="#FFFFFF" clip-path="url(#juv_clip)"/>
+  <!-- Dividing gold stripe -->
+  <rect x="96" y="10" width="8" height="180" fill="#F4A300" clip-path="url(#juv_clip)"/>
+  <!-- Bull head (Juventus mascot) -->
+  <ellipse cx="100" cy="95" rx="24" ry="20" fill="#F4A300"/>
+  <!-- Horns -->
+  <path d="M80,82 Q66,60 76,74" stroke="#F4A300" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <path d="M120,82 Q134,60 124,74" stroke="#F4A300" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <!-- Eyes -->
+  <circle cx="92" cy="93" r="4" fill="#000000"/>
+  <circle cx="108" cy="93" r="4" fill="#000000"/>
+  <!-- Nose ring -->
+  <ellipse cx="100" cy="108" rx="7" ry="4" fill="none" stroke="#000000" stroke-width="2.5"/>
+  <!-- Nostrils -->
+  <circle cx="95" cy="106" r="2.5" fill="#000000"/>
+  <circle cx="105" cy="106" r="2.5" fill="#000000"/>
+  <!-- Top banner -->
+  <rect x="10" y="10" width="180" height="32" fill="#F4A300" clip-path="url(#juv_clip)"/>
+  <text x="100" y="32" text-anchor="middle" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="16" fill="#000000">JUVENTUS</text>
+  <!-- Bottom banner -->
+  <rect x="10" y="158" width="180" height="32" fill="#F4A300" clip-path="url(#juv_clip)"/>
+  <text x="100" y="178" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="12" fill="#000000">FC 1897</text>
+</svg>
