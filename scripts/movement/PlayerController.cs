@@ -348,6 +348,7 @@ public partial class PlayerController : CharacterBody2D
 			float headW       = PlaceholderWidth - 28f;
 			float headH       = PlaceholderHeight * 0.58f;
 			float headCenterY = (8f + headH / 2f) - PlaceholderHeight / 2f;
+			collision.Scale    = Vector2.One; // ignore the scene's (6,4) scale on this node
 			collision.Shape    = new RectangleShape2D { Size = new Vector2(headW, headH) };
 			collision.Position = new Vector2(0f, headCenterY);
 		}
