@@ -98,7 +98,7 @@ script = ExtResource("2_cpr0p")
 [node name="Sprite2D" type="Sprite2D" parent="Player1" unique_id=2090077016]
 texture = ExtResource("3_78awf")
 
-[node name="PlayerColisionArea" type="CollisionShape2D" parent="Player1" unique_id=354522304]
+[node name="PlayerCollisionShape" type="CollisionShape2D" parent="Player1" unique_id=354522304]
 scale = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_s0nni")
 
@@ -113,7 +113,7 @@ JumpAction = "Player2_Jump"
 [node name="Sprite2D" type="Sprite2D" parent="Player2" unique_id=2051332855]
 texture = ExtResource("3_78awf")
 
-[node name="PlayerColisionArea" type="CollisionShape2D" parent="Player2" unique_id=1821566449]
+[node name="PlayerCollisionShape" type="CollisionShape2D" parent="Player2" unique_id=1821566449]
 scale = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_cpr0p")
 

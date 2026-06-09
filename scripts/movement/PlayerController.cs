@@ -235,7 +235,7 @@ public partial class PlayerController : CharacterBody2D
 			return;
 		}
 
-		var collision = GetNodeOrNull<CollisionShape2D>("PlayerColisionArea");
+		var collision = GetNodeOrNull<CollisionShape2D>("PlayerCollisionShape");
 
 		sprite.Centered = true;
 		sprite.Position = Vector2.Zero;
