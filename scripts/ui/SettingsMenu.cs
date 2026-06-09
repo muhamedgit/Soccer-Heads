@@ -12,6 +12,8 @@ public partial class SettingsMenu : Control
 	{
 		GD.Print("SettingsMenu script loaded.");
 
+		UiTheme.Apply(this);
+
 		_audioManager = GetNode<AudioManager>("/root/AudioManager");
 		_volumeSlider = GetNode<HSlider>("CenterContainer/VBoxContainer/VolumeRow/VolumeSlider");
 		_volumeValue = GetNodeOrNull<Label>("CenterContainer/VBoxContainer/VolumeRow/VolumeValue");

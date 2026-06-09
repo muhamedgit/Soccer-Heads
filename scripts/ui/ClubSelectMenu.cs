@@ -29,6 +29,8 @@ public partial class ClubSelectMenu : Control
 
 	public override void _Ready()
 	{
+		UiTheme.Apply(this);
+
 		_gameState = GetNode<GameState>("/root/GameState");
 		_sceneManager = GetNode<SceneManager>("/root/SceneManager");
 		_twoPlayers = _gameState.Mode == GameState.GameMode.PlayerVsPlayer;
@@ -45,10 +47,7 @@ public partial class ClubSelectMenu : Control
 
 	private void BuildUi()
 	{
-		var background = new ColorRect { Color = Palette.UiPanelDarker };
-		background.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-		AddChild(background);
-
+		// Backdrop comes from UiTheme.Apply (stadium image); no opaque fill here.
 		var center = new CenterContainer();
 		center.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
 		AddChild(center);
@@ -172,7 +171,7 @@ public partial class ClubSelectMenu : Control
 		for (int i = 0; i < _thumbButtons.Length; i++)
 		{
 			ClubDatabase.PlayerVariant variant = club.Players[i];
-			_thumbButtons[i].Icon = PlayerSpriteFactory.BuildHeadThumbnail(ThumbSize, club, variant);
+			_thumbButtons[i].Icon = PlayerSpriteFactory.BuildHeadThumbnail(variant);
 			_thumbButtons[i].Text = variant.Name;
 
 			bool selected = i == _player[_side];

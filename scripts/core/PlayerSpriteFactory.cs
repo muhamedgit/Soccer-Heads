@@ -8,106 +8,74 @@ using System;
 // then falls back to a procedural disc so the game works before first import.
 public static class PlayerSpriteFactory
 {
-	// Full in-match avatar: big rounded-rect head + small club-colored body stub.
-	// The kicking leg is a separate Sprite2D child on PlayerController.
-	public static Texture2D BuildPlayerTexture(
-		int width, int height, int playerIndex,
-		in ClubDatabase.Club club, in ClubDatabase.PlayerVariant variant,
-		Color outlineColor, int outline)
+	// Full in-match avatar: the head is an SVG asset (Assets/Heads, wired per variant in
+	// ClubDatabase). The kicking foot is a separate Sprite2D child on PlayerController.
+	public static Texture2D BuildPlayerTexture(in ClubDatabase.PlayerVariant variant)
 	{
-		Image image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
-		image.Fill(Colors.Transparent);
-
-		// Head: rounded rectangle filling ~85% of canvas width
-		float hx = 14f, hy = 8f;
-		float hw = width  - 28f;
-		float hh = height * 0.58f;
-		float hr = 22f;
-
-		DrawRoundedHead(image, hx, hy, hw, hh, hr,
-			variant.SkinColor, variant.HairColor, outlineColor, outline);
-
-		// Club body stub — small rectangle below the chin (partially behind the head)
-		float bw = width  * 0.45f;
-		float bh = height * 0.17f;
-		float bx = width  / 2f - bw / 2f;
-		float by = hy + hh - outline * 2f;
-
-		DrawRect(image,
-			Mathf.RoundToInt(bx - outline), Mathf.RoundToInt(by - outline),
-			Mathf.RoundToInt(bw + outline * 2), Mathf.RoundToInt(bh + outline * 2),
-			outlineColor);
-		DrawRect(image,
-			Mathf.RoundToInt(bx), Mathf.RoundToInt(by),
-			Mathf.RoundToInt(bw), Mathf.RoundToInt(bh),
-			club.PrimaryColor);
-
-		// Accent stripe on body (horizontal for P1, vertical for P2)
-		if (playerIndex == 1)
-		{
-			int sh = Math.Max(4, Mathf.RoundToInt(bh / 4));
-			DrawRect(image,
-				Mathf.RoundToInt(bx + outline), Mathf.RoundToInt(by + bh / 3),
-				Mathf.RoundToInt(bw - outline * 2), sh,
-				club.AccentColor);
-		}
-		else
-		{
-			int sw = Math.Max(4, Mathf.RoundToInt(bw / 7));
-			DrawRect(image,
-				width / 2 - sw / 2, Mathf.RoundToInt(by + outline),
-				sw, Mathf.RoundToInt(bh - outline * 2),
-				club.AccentColor);
-		}
-
-		return ImageTexture.CreateFromImage(image);
+		return TryLoadSvg(variant.HeadPath);
 	}
 
-	// Square head thumbnail for the selection grid.
-	public static Texture2D BuildHeadThumbnail(
-		int size, in ClubDatabase.Club club, in ClubDatabase.PlayerVariant variant)
+	// Loads an imported SVG texture from a res:// path, or null if absent/not yet imported.
+	private static Texture2D TryLoadSvg(string path)
 	{
-		Image image = Image.CreateEmpty(size, size, false, Image.Format.Rgba8);
-		image.Fill(Colors.Transparent);
-
-		Color outlineColor = new Color(0f, 0f, 0f, 1f);
-		int outline = Math.Max(2, size / 28);
-
-		// Club colour strip at the bottom (shows shirt)
-		int collarH = (int)(size * 0.22f);
-		DrawRect(image, 0, size - collarH - outline, size, collarH + outline + 1, outlineColor);
-		DrawRect(image, outline, size - collarH, size - outline * 2, collarH, club.PrimaryColor);
-
-		// Rounded rect head overlapping the collar
-		float hx = size * 0.08f, hy = size * 0.05f;
-		float hw = size * 0.84f, hh = size * 0.80f;
-		float hr = size * 0.10f;
-		DrawRoundedHead(image, hx, hy, hw, hh, hr,
-			variant.SkinColor, variant.HairColor, outlineColor, outline);
-
-		return ImageTexture.CreateFromImage(image);
+		if (string.IsNullOrEmpty(path))
+			return null;
+		try
+		{
+			return ResourceLoader.Load<Texture2D>(path);
+		}
+		catch { return null; }
 	}
 
-	// Boot texture for the kick foot. Toe points RIGHT in its natural orientation (0° rotation).
-	// The outline and body use DrawRoundedRect; a lighter sole strip runs along the bottom.
+	// Head thumbnail for the selection grid — the same SVG head shown in-match.
+	public static Texture2D BuildHeadThumbnail(in ClubDatabase.PlayerVariant variant)
+	{
+		return TryLoadSvg(variant.HeadPath);
+	}
+
+	// Side-view football boot. Toe points RIGHT in its natural orientation (0° rotation),
+	// the heel/ankle rises at the LEFT, and a pale sole runs along the bottom — so when the
+	// foot rests flat it clearly reads as a foot, and the toe leads when it swings up.
 	public static Texture2D BuildFootTexture(int width, int height, Color outlineColor, int outline)
 	{
 		Image image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
 		image.Fill(Colors.Transparent);
 
-		Color bootBody = new Color(0.14f, 0.11f, 0.10f);
-		Color bootSole = new Color(0.88f, 0.84f, 0.76f);
-		float r = height * 0.40f;
+		Color bootBody = new Color(0.16f, 0.13f, 0.12f);
+		Color bootSole = new Color(0.93f, 0.91f, 0.85f);
+		Color laces    = new Color(1f, 1f, 1f, 0.70f);
 
-		DrawRoundedRect(image, 0, 0, (float)width, (float)height, r, outlineColor);
-		DrawRoundedRect(image, (float)outline, (float)outline,
-			width - outline * 2f, height - outline * 2f, r, bootBody);
+		// Foot body sits in the lower part; the ankle nub rises above it at the heel side.
+		float footTop = height * 0.34f;
+		float footH   = height - footTop;
+		float footR   = footH * 0.48f;        // rounds the toe (right) and heel (left)
 
-		int soleH = Math.Max(3, height / 5);
-		DrawRoundedRect(image,
-			(float)outline, height - outline - soleH,
-			width - outline * 2f, (float)soleH,
-			r * 0.35f, bootSole);
+		float ankleW  = width * 0.34f;        // shin/ankle stub at the heel (left)
+		float ankleH  = footTop + footH * 0.45f;
+		float ankleR  = ankleW * 0.45f;
+
+		// Outline (slightly enlarged shapes drawn underneath the fills)
+		DrawRoundedRect(image, -outline, footTop - outline,
+			width + outline * 2f, footH + outline * 2f, footR + outline, outlineColor);
+		DrawRoundedRect(image, -outline, -outline,
+			ankleW + outline * 2f, ankleH + outline * 2f, ankleR + outline, outlineColor);
+
+		// Dark upper: foot + ankle
+		DrawRoundedRect(image, 0, footTop, width, footH, footR, bootBody);
+		DrawRoundedRect(image, 0, 0, ankleW, ankleH, ankleR, bootBody);
+
+		// Pale sole along the bottom
+		int soleH = Math.Max(4, Mathf.RoundToInt(footH * 0.30f));
+		DrawRoundedRect(image, outline, height - soleH - outline,
+			width - outline * 2f, soleH, footR * 0.5f, bootSole);
+
+		// Lace marks on the instep (between the ankle and the toe)
+		int laceH  = Math.Max(2, height / 12);
+		int laceY  = Mathf.RoundToInt(footTop + footH * 0.16f);
+		int laceX0 = Mathf.RoundToInt(ankleW * 0.85f);
+		int laceX1 = Mathf.RoundToInt(width * 0.80f);
+		for (int lx = laceX0; lx < laceX1; lx += laceH + 3)
+			DrawRect(image, lx, laceY, Math.Max(2, laceH - 1), laceH, laces);
 
 		return ImageTexture.CreateFromImage(image);
 	}
@@ -115,15 +83,9 @@ public static class PlayerSpriteFactory
 	// Club emblem: tries SVG first, falls back to procedural disc.
 	public static Texture2D BuildEmblem(int size, in ClubDatabase.Club club)
 	{
-		if (!string.IsNullOrEmpty(club.CrestPath))
-		{
-			try
-			{
-				var svgTex = ResourceLoader.Load<Texture2D>(club.CrestPath);
-				if (svgTex != null) return svgTex;
-			}
-			catch { }
-		}
+		Texture2D svgTex = TryLoadSvg(club.CrestPath);
+		if (svgTex != null)
+			return svgTex;
 
 		return BuildProceduralEmblem(size, club);
 	}
@@ -148,102 +110,6 @@ public static class PlayerSpriteFactory
 					image.SetPixel(x, y, club.AccentColor);
 
 		return ImageTexture.CreateFromImage(image);
-	}
-
-	// Draws a rounded-rectangle head with ears, hair cap, and cartoon face.
-	private static void DrawRoundedHead(
-		Image image, float x, float y, float w, float h, float cornerR,
-		Color skin, Color hair, Color outlineColor, int outline)
-	{
-		float cx = x + w / 2f;
-		float cy = y + h / 2f;
-		float featureRef = h * 0.42f; // scaling reference for face features
-
-		// Ears: drawn BEFORE the head so the head outline covers their inner half
-		float earY = cy + h * 0.04f;
-		float earR = h * 0.10f;
-		DrawFilledCircle(image, new Vector2(x, earY),     earR + outline, outlineColor);
-		DrawFilledCircle(image, new Vector2(x + w, earY), earR + outline, outlineColor);
-		DrawFilledCircle(image, new Vector2(x, earY),     earR, skin);
-		DrawFilledCircle(image, new Vector2(x + w, earY), earR, skin);
-
-		// Head: outline shell then skin fill
-		DrawRoundedRect(image,
-			x - outline, y - outline, w + outline * 2, h + outline * 2,
-			cornerR + outline, outlineColor);
-		DrawRoundedRect(image, x, y, w, h, cornerR, skin);
-
-		// Hair cap: top 33% of head height, pixel-clipped to the rounded rect
-		float hairlineY = y + h * 0.33f;
-		int   pyHairMax = Math.Min(image.GetHeight() - 1, Mathf.CeilToInt(hairlineY));
-		for (int py = Math.Max(0, Mathf.FloorToInt(y)); py <= pyHairMax; py++)
-		{
-			for (int px = Math.Max(0, Mathf.FloorToInt(x));
-			     px <= Math.Min(image.GetWidth() - 1, Mathf.CeilToInt(x + w)); px++)
-			{
-				if (IsInsideRoundedRect(px, py, x, y, w, h, cornerR))
-					image.SetPixel(px, py, hair);
-			}
-		}
-
-		DrawFaceFeatures(image, new Vector2(cx, cy), featureRef, hairlineY, outlineColor);
-	}
-
-	// Soccer Heads style face: large circular eyes, brows, nostril dots, mouth line.
-	private static void DrawFaceFeatures(
-		Image image, Vector2 center, float radius, float hairLine, Color outlineColor)
-	{
-		float eyeSpacing = radius * 0.40f;
-		float eyeR       = radius * 0.20f;
-
-		float browY = hairLine + radius * 0.07f;
-		float eyeY  = browY   + radius * 0.22f;
-
-		var leftEye  = new Vector2(center.X - eyeSpacing, eyeY);
-		var rightEye = new Vector2(center.X + eyeSpacing, eyeY);
-
-		// Eye: outline ring → white → iris → pupil → specular highlight
-		DrawFilledCircle(image, leftEye,  eyeR * 1.35f, outlineColor);
-		DrawFilledCircle(image, rightEye, eyeR * 1.35f, outlineColor);
-		DrawFilledCircle(image, leftEye,  eyeR * 1.20f, Colors.White);
-		DrawFilledCircle(image, rightEye, eyeR * 1.20f, Colors.White);
-
-		Color irisColor = new Color(0.22f, 0.14f, 0.08f);
-		DrawFilledCircle(image, leftEye,  eyeR * 0.78f, irisColor);
-		DrawFilledCircle(image, rightEye, eyeR * 0.78f, irisColor);
-
-		var pupilOff = new Vector2(eyeR * 0.15f, -eyeR * 0.12f);
-		DrawFilledCircle(image, leftEye  + pupilOff, eyeR * 0.42f, Colors.Black);
-		DrawFilledCircle(image, rightEye + pupilOff, eyeR * 0.42f, Colors.Black);
-
-		var hlOff = new Vector2(-eyeR * 0.30f, -eyeR * 0.30f);
-		DrawFilledCircle(image, leftEye  + hlOff, eyeR * 0.20f, Colors.White);
-		DrawFilledCircle(image, rightEye + hlOff, eyeR * 0.20f, Colors.White);
-
-		// Eyebrows
-		int browW = Mathf.RoundToInt(eyeR * 2.2f);
-		int browH = Math.Max(2, Mathf.RoundToInt(eyeR * 0.45f));
-		DrawRect(image,
-			Mathf.RoundToInt(leftEye.X  - browW / 2f), Mathf.RoundToInt(browY - browH - 2),
-			browW, browH, outlineColor);
-		DrawRect(image,
-			Mathf.RoundToInt(rightEye.X - browW / 2f), Mathf.RoundToInt(browY - browH - 2),
-			browW, browH, outlineColor);
-
-		// Nostril dots
-		float noseY   = center.Y + radius * 0.22f;
-		float noseDot = Math.Max(1f, radius * 0.055f);
-		var   noseCol = new Color(0f, 0f, 0f, 0.30f);
-		DrawFilledCircle(image, new Vector2(center.X - radius * 0.09f, noseY), noseDot, noseCol);
-		DrawFilledCircle(image, new Vector2(center.X + radius * 0.09f, noseY), noseDot, noseCol);
-
-		// Mouth
-		float mouthY = center.Y + radius * 0.42f;
-		int   mouthW = Mathf.RoundToInt(radius * 0.46f);
-		int   mouthH = Math.Max(2, Mathf.RoundToInt(radius * 0.11f));
-		DrawRect(image,
-			Mathf.RoundToInt(center.X - mouthW / 2f), Mathf.RoundToInt(mouthY),
-			mouthW, mouthH, new Color(0.50f, 0.12f, 0.12f, 0.90f));
 	}
 
 	private static bool IsInsideRoundedRect(float px, float py, float x, float y, float w, float h, float r)

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated head for Soccer Headz. 192x256 canvas; head occupies the top region
+     (x:14..178, y:8..156) so it lines up with the kicking-foot orbit and body collider. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="256" viewBox="0 0 192 256">
+  <defs><clipPath id="hc"><rect x="14" y="8" width="164" height="148" rx="22" ry="22"/></clipPath></defs>
+  <circle cx="14" cy="88" r="18" fill="#FCD4B0" stroke="#000000" stroke-width="5"/>
+  <circle cx="178" cy="88" r="18" fill="#FCD4B0" stroke="#000000" stroke-width="5"/>
+  <rect x="14" y="8" width="164" height="148" rx="22" ry="22" fill="#FCD4B0" stroke="#000000" stroke-width="5"/>
+  <rect x="14" y="8" width="164" height="49" fill="#5C381F" clip-path="url(#hc)"/>
+  <rect x="57" y="55" width="28" height="6" rx="2" fill="#000000"/>
+  <rect x="107" y="55" width="28" height="6" rx="2" fill="#000000"/>
+  <circle cx="71" cy="75" r="15" fill="#ffffff" stroke="#000000" stroke-width="3"/>
+  <circle cx="121" cy="75" r="15" fill="#ffffff" stroke="#000000" stroke-width="3"/>
+  <circle cx="73" cy="76" r="9" fill="#38240f"/>
+  <circle cx="123" cy="76" r="9" fill="#38240f"/>
+  <circle cx="74" cy="74" r="4.5" fill="#000000"/>
+  <circle cx="124" cy="74" r="4.5" fill="#000000"/>
+  <circle cx="69" cy="72" r="2.5" fill="#ffffff"/>
+  <circle cx="119" cy="72" r="2.5" fill="#ffffff"/>
+  <circle cx="90" cy="96" r="3" fill="#00000044"/>
+  <circle cx="102" cy="96" r="3" fill="#00000044"/>
+  <rect x="82" y="105" width="28" height="7" rx="3" fill="#7a1f1f"/>
+</svg>

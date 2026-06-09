@@ -12,12 +12,14 @@ public static class ClubDatabase
 		public readonly string Name;
 		public readonly Color SkinColor;
 		public readonly Color HairColor;
+		public readonly string HeadPath; // optional res:// SVG head; null = draw procedurally
 
-		public PlayerVariant(string name, Color skin, Color hair)
+		public PlayerVariant(string name, Color skin, Color hair, string headPath = null)
 		{
 			Name = name;
 			SkinColor = skin;
 			HairColor = hair;
+			HeadPath = headPath;
 		}
 	}
 
@@ -57,6 +59,14 @@ public static class ClubDatabase
 	private static readonly Color HairBlond  = new Color(0.93f, 0.80f, 0.36f);
 	private static readonly Color HairGinger = new Color(0.80f, 0.40f, 0.10f);
 
+	// SVG head assets, one per skin+hair combination (see Assets/Heads).
+	private const string HeadLightBrown  = "res://Assets/Heads/head_light_brown.svg";
+	private const string HeadLightBlack  = "res://Assets/Heads/head_light_black.svg";
+	private const string HeadLightBlond  = "res://Assets/Heads/head_light_blond.svg";
+	private const string HeadLightGinger = "res://Assets/Heads/head_light_ginger.svg";
+	private const string HeadMidBlack    = "res://Assets/Heads/head_mid_black.svg";
+	private const string HeadDarkBlack   = "res://Assets/Heads/head_dark_black.svg";
+
 	public static readonly Club[] Clubs =
 	{
 		// Real Madrid — white/gold, speed-focused
@@ -67,9 +77,9 @@ public static class ClubDatabase
 			speed: 1.08f, jump: 1.00f, kick: 0.96f,
 			new[]
 			{
-				new PlayerVariant("Bellingham", SkinLight, HairBrown),
-				new PlayerVariant("Vinicius",   SkinDark,  HairBlack),
-				new PlayerVariant("Modric",     SkinLight, HairBlack),
+				new PlayerVariant("Bellingham", SkinLight, HairBrown, HeadLightBrown),
+				new PlayerVariant("Vinicius",   SkinDark,  HairBlack, HeadDarkBlack),
+				new PlayerVariant("Modric",     SkinLight, HairBlack, HeadLightBlack),
 			}
 		),
 
@@ -81,9 +91,9 @@ public static class ClubDatabase
 			speed: 0.97f, jump: 1.02f, kick: 1.10f,
 			new[]
 			{
-				new PlayerVariant("Saka",       SkinDark,  HairBlack),
-				new PlayerVariant("Havertz",    SkinLight, HairBlond),
-				new PlayerVariant("Martinelli", SkinDark,  HairBlack),
+				new PlayerVariant("Saka",       SkinDark,  HairBlack, HeadDarkBlack),
+				new PlayerVariant("Havertz",    SkinLight, HairBlond, HeadLightBlond),
+				new PlayerVariant("Martinelli", SkinDark,  HairBlack, HeadDarkBlack),
 			}
 		),
 
@@ -95,9 +105,9 @@ public static class ClubDatabase
 			speed: 1.00f, jump: 1.12f, kick: 0.94f,
 			new[]
 			{
-				new PlayerVariant("Haaland",   SkinLight, HairBlond),
-				new PlayerVariant("De Bruyne", SkinLight, HairGinger),
-				new PlayerVariant("Doku",      SkinDark,  HairBlack),
+				new PlayerVariant("Haaland",   SkinLight, HairBlond,  HeadLightBlond),
+				new PlayerVariant("De Bruyne", SkinLight, HairGinger, HeadLightGinger),
+				new PlayerVariant("Doku",      SkinDark,  HairBlack,  HeadDarkBlack),
 			}
 		),
 
@@ -109,9 +119,9 @@ public static class ClubDatabase
 			speed: 1.00f, jump: 1.00f, kick: 1.08f,
 			new[]
 			{
-				new PlayerVariant("Vlahovic", SkinMid,  HairBlack),
-				new PlayerVariant("Yildiz",   SkinMid,  HairBlack),
-				new PlayerVariant("Bremer",   SkinDark, HairBlack),
+				new PlayerVariant("Vlahovic", SkinMid,  HairBlack, HeadMidBlack),
+				new PlayerVariant("Yildiz",   SkinMid,  HairBlack, HeadMidBlack),
+				new PlayerVariant("Bremer",   SkinDark, HairBlack, HeadDarkBlack),
 			}
 		),
 
@@ -123,9 +133,9 @@ public static class ClubDatabase
 			speed: 1.10f, jump: 0.96f, kick: 1.00f,
 			new[]
 			{
-				new PlayerVariant("Salah",             SkinMid,   HairBlack),
-				new PlayerVariant("Nunez",             SkinMid,   HairBlack),
-				new PlayerVariant("Alexander-Arnold",  SkinLight, HairBlond),
+				new PlayerVariant("Salah",             SkinMid,   HairBlack, HeadMidBlack),
+				new PlayerVariant("Nunez",             SkinMid,   HairBlack, HeadMidBlack),
+				new PlayerVariant("Alexander-Arnold",  SkinLight, HairBlond, HeadLightBlond),
 			}
 		),
 	};
