@@ -39,6 +39,28 @@ public partial class GameState : Node
 	public int ScoreLimit { get; set; } = DefaultScoreToWin;
 	public float MatchDurationSeconds { get; set; } = DefaultMatchDuration;
 
+	// Club + player chosen on the club-selection screen (Create Clubs feature). Indices into
+	// ClubDatabase; kept across ResetMatch like Mode/Difficulty so a rematch keeps the picks.
+	public int ClubOneIndex { get; set; }
+	public int PlayerOneVariant { get; set; }
+	public int ClubTwoIndex { get; set; } = 1;
+	public int PlayerTwoVariant { get; set; }
+
+	// Pick a random club + player for player two; used for the AI side in vs-Computer matches.
+	public void RandomizeClubTwo()
+	{
+		var rng = new RandomNumberGenerator();
+		rng.Randomize();
+		ClubTwoIndex = rng.RandiRange(0, ClubDatabase.ClubCount - 1);
+		PlayerTwoVariant = rng.RandiRange(0, ClubDatabase.PlayersPerClub - 1);
+	}
+
+	public string GetClubName(int playerIndex)
+	{
+		int clubIndex = playerIndex == 1 ? ClubTwoIndex : ClubOneIndex;
+		return ClubDatabase.GetClub(clubIndex).Name;
+	}
+
 	public bool HasScoreLimit => ScoreLimit > 0;
 	public bool IsTimed => MatchDurationSeconds > 0f;
 

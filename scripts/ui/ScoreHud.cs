@@ -28,10 +28,59 @@ public partial class ScoreHud : CanvasLayer
 				playerTwoName.Text = "COMPUTER";
 		}
 
+		CreateClubCornerLabels();
+
 		_gameState.ScoreChanged += UpdateScore;
 		_gameState.TimeChanged += UpdateTime;
 		UpdateScore(_gameState.PlayerOneScore, _gameState.PlayerTwoScore);
 		UpdateTime(_gameState.MatchTimeLeft);
+	}
+
+	// Show each side's chosen club name in its corner: Player 1 top-left, Player 2 top-right.
+	private void CreateClubCornerLabels()
+	{
+		GetNodeOrNull<Control>("ClubCorners")?.QueueFree();
+
+		var root = new Control { Name = "ClubCorners", MouseFilter = Control.MouseFilterEnum.Ignore };
+		root.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+		AddChild(root);
+
+		AddCornerLabel(root, "ClubOneLabel", _gameState.GetClubName(0).ToUpper(),
+			Palette.TeamBlue, isLeft: true);
+		AddCornerLabel(root, "ClubTwoLabel", _gameState.GetClubName(1).ToUpper(),
+			Palette.TeamRed, isLeft: false);
+	}
+
+	private void AddCornerLabel(Control parent, string nodeName, string text, Color color, bool isLeft)
+	{
+		var label = new Label
+		{
+			Name = nodeName,
+			Text = text,
+			MouseFilter = Control.MouseFilterEnum.Ignore,
+			HorizontalAlignment = isLeft ? HorizontalAlignment.Left : HorizontalAlignment.Right
+		};
+
+		label.SetAnchorsPreset(isLeft ? Control.LayoutPreset.TopLeft : Control.LayoutPreset.TopRight);
+		label.GrowHorizontal = isLeft
+			? Control.GrowDirection.End
+			: Control.GrowDirection.Begin;
+
+		// Inset from the screen edge.
+		if (isLeft)
+		{
+			label.OffsetLeft = 28f;
+			label.OffsetTop = 24f;
+		}
+		else
+		{
+			label.OffsetRight = -28f;
+			label.OffsetTop = 24f;
+		}
+
+		Palette.ApplyReadableLabel(label, 30);
+		label.AddThemeColorOverride("font_color", color);
+		parent.AddChild(label);
 	}
 
 	public override void _ExitTree()

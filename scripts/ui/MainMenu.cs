@@ -149,7 +149,8 @@ public partial class MainMenu : Control
 		gameState.SaveMatchSettings(chosenScore, chosenTime);
 		gameState.ResetMatch();
 
-		GetNode<SceneManager>("/root/SceneManager").GoToMatch();
+		// Pick clubs + players next; the club-selection screen starts the match when confirmed.
+		GetNode<SceneManager>("/root/SceneManager").GoToClubSelect();
 	}
 
 	private void OnInstructionsPressed()
