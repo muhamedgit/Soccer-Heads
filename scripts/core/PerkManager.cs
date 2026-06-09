@@ -137,7 +137,7 @@ public partial class PerkManager : Node
 		PerkDefinition def = _registry[_rng.RandiRange(0, _registry.Count - 1)];
 
 		var pickup = new PerkPickup();
-		pickup.Configure(def.Type, def.Color, PickupRadius);
+		pickup.Configure(def.Type, def.Color, PickupRadius, def.IconPath);
 		_world.AddChild(pickup);
 		pickup.GlobalPosition = new Vector2(
 			_rng.RandfRange(SpawnMinX, SpawnMaxX),
@@ -206,25 +206,34 @@ public partial class PerkManager : Node
 		{
 			// --- Advantages (good for the holder) ---
 			Scalar(PerkType.SpeedBoost, "SPEED+", true, Palette.SkyBlue,
-				p => p.Speed, (p, v) => p.Speed = v, SpeedBoostMultiplier),
+				p => p.Speed, (p, v) => p.Speed = v, SpeedBoostMultiplier,
+				"res://Assets/Perks/speed_boost.svg"),
 			Scalar(PerkType.HighJump, "JUMP+", true, Palette.Success,
-				p => p.JumpVelocity, (p, v) => p.JumpVelocity = v, HighJumpMultiplier),
-			KickPerk(PerkType.PowerShot, "POWER+", true, Palette.ArcadeYellow, PowerShotMultiplier),
-			ScaleNode(PerkType.BigPlayer, "BIG+", true, Palette.TeamBlue, BigPlayerScale),
+				p => p.JumpVelocity, (p, v) => p.JumpVelocity = v, HighJumpMultiplier,
+				"res://Assets/Perks/high_jump.svg"),
+			KickPerk(PerkType.PowerShot, "POWER+", true, Palette.ArcadeYellow, PowerShotMultiplier,
+				"res://Assets/Perks/power_shot.svg"),
+			ScaleNode(PerkType.BigPlayer, "BIG+", true, Palette.TeamBlue, BigPlayerScale,
+				"res://Assets/Perks/big_player.svg"),
 
 			// --- Disadvantages (bad for the holder) ---
 			Scalar(PerkType.SlowDown, "SLOW-", false, Palette.Danger,
-				p => p.Speed, (p, v) => p.Speed = v, SlowDownMultiplier),
+				p => p.Speed, (p, v) => p.Speed = v, SlowDownMultiplier,
+				"res://Assets/Perks/slow_down.svg"),
 			Scalar(PerkType.LowJump, "JUMP-", false, Palette.Warning,
-				p => p.JumpVelocity, (p, v) => p.JumpVelocity = v, LowJumpMultiplier),
-			KickPerk(PerkType.WeakKick, "KICK-", false, Palette.UiDisabled, WeakKickMultiplier),
-			ScaleNode(PerkType.SmallPlayer, "SMALL-", false, Palette.UiTextMuted, SmallPlayerScale),
+				p => p.JumpVelocity, (p, v) => p.JumpVelocity = v, LowJumpMultiplier,
+				"res://Assets/Perks/low_jump.svg"),
+			KickPerk(PerkType.WeakKick, "KICK-", false, Palette.UiDisabled, WeakKickMultiplier,
+				"res://Assets/Perks/weak_kick.svg"),
+			ScaleNode(PerkType.SmallPlayer, "SMALL-", false, Palette.UiTextMuted, SmallPlayerScale,
+				"res://Assets/Perks/small_player.svg"),
 		};
 	}
 
 	// Multiply a single float field and restore it exactly.
 	private PerkDefinition Scalar(PerkType type, string label, bool advantage, Color color,
-		System.Func<PlayerController, float> get, System.Action<PlayerController, float> set, float multiplier)
+		System.Func<PlayerController, float> get, System.Action<PlayerController, float> set,
+		float multiplier, string iconPath = null)
 	{
 		return new PerkDefinition
 		{
@@ -233,6 +242,7 @@ public partial class PerkManager : Node
 			IsAdvantage = advantage,
 			Color = color,
 			Duration = PerkDuration,
+			IconPath = iconPath,
 			Apply = holder =>
 			{
 				float old = get(holder);
@@ -242,7 +252,8 @@ public partial class PerkManager : Node
 		};
 	}
 
-	private PerkDefinition KickPerk(PerkType type, string label, bool advantage, Color color, float multiplier)
+	private PerkDefinition KickPerk(PerkType type, string label, bool advantage, Color color,
+		float multiplier, string iconPath = null)
 	{
 		return new PerkDefinition
 		{
@@ -251,6 +262,7 @@ public partial class PerkManager : Node
 			IsAdvantage = advantage,
 			Color = color,
 			Duration = PerkDuration,
+			IconPath = iconPath,
 			Apply = holder =>
 			{
 				float oldBase = holder.BaseKickSpeed;
@@ -266,7 +278,8 @@ public partial class PerkManager : Node
 		};
 	}
 
-	private PerkDefinition ScaleNode(PerkType type, string label, bool advantage, Color color, float scale)
+	private PerkDefinition ScaleNode(PerkType type, string label, bool advantage, Color color,
+		float scale, string iconPath = null)
 	{
 		return new PerkDefinition
 		{
@@ -275,6 +288,7 @@ public partial class PerkManager : Node
 			IsAdvantage = advantage,
 			Color = color,
 			Duration = PerkDuration,
+			IconPath = iconPath,
 			Apply = holder =>
 			{
 				Vector2 old = holder.Scale;

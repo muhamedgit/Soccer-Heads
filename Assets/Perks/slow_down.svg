@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Purple background -->
+  <circle cx="50" cy="50" r="48" fill="#4A148C"/>
+  <circle cx="50" cy="50" r="44" fill="#7B1FA2"/>
+  <!-- Turtle shell -->
+  <ellipse cx="50" cy="58" rx="28" ry="22" fill="#BBBBBB"/>
+  <!-- Shell hexagon pattern -->
+  <ellipse cx="50" cy="55" rx="16" ry="12" fill="#999999"/>
+  <line x1="34" y1="58" x2="66" y2="58" stroke="#888888" stroke-width="2"/>
+  <line x1="50" y1="36" x2="50" y2="80" stroke="#888888" stroke-width="1.5" opacity="0.5"/>
+  <!-- Turtle head -->
+  <circle cx="74" cy="54" r="9" fill="#BBBBBB"/>
+  <circle cx="78" cy="51" r="2.5" fill="#555555"/>
+  <!-- Front leg -->
+  <ellipse cx="36" cy="74" rx="8" ry="5" fill="#BBBBBB"/>
+  <!-- Back leg -->
+  <ellipse cx="62" cy="75" rx="8" ry="5" fill="#BBBBBB"/>
+  <!-- Tail -->
+  <path d="M22,62 Q14,54 18,50" stroke="#BBBBBB" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- Minus symbol at top -->
+  <rect x="34" y="16" width="32" height="9" rx="4" fill="#FF6666"/>
+</svg>
