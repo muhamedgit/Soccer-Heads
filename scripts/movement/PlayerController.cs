@@ -19,8 +19,6 @@ public partial class PlayerController : CharacterBody2D
 	[Export] public float KickBoost = 1.9f;
 	[Export] public float KickActiveSeconds = 0.18f;   // window during which a touch counts as a real kick
 	[Export] public float KickCooldownSeconds = 0.45f; // can't spam-kick
-	[Export] public float KickSwingDegrees = 100f;     // how far the leg swings forward
-	[Export] public float KickSwingSeconds = 0.16f;    // forward-swing duration (return is the same)
 
 	[Export] public float MinX = 50f;
 	[Export] public float MaxX = 2250f;
@@ -54,12 +52,12 @@ public partial class PlayerController : CharacterBody2D
 	private bool _wasOnFloor;
 	private RigidBody2D _ballInContact;
 
-	// Leg-kick runtime state.
-	private float _kickActiveLeft;     // > 0 while a swing counts as a real kick
-	private float _kickCooldownLeft;   // > 0 while a new kick is blocked
-	private int _facing = 1;           // +1 facing right, -1 facing left (drives the swing direction)
-	private Sprite2D _legSprite;
-	private Tween _legTween;
+	// Foot-kick runtime state.
+	private float _kickActiveLeft;   // > 0 while the kick boost window is open
+	private float _kickCooldownLeft; // > 0 while a new kick is blocked
+	private int   _kickDir = 1;      // +1 = P1 kicks right, -1 = P2 kicks left (set in CreateFoot)
+	private Sprite2D _footSprite;
+	private float _footAngle;        // current arc angle in radians (π/2 = 6-o'clock rest)
 
 	private GameState _gameState;
 	private int _playerIndex;
@@ -96,7 +94,7 @@ public partial class PlayerController : CharacterBody2D
 
 		ApplyClubModifiers();
 		SetupPlayerSprite();
-		CreateLeg();
+		CreateFoot();
 	}
 
 	// Apply the chosen club's small, balanced stat modifiers to this player's movement and kick.
@@ -122,14 +120,11 @@ public partial class PlayerController : CharacterBody2D
 		_kickActiveLeft = Mathf.Max(0f, _kickActiveLeft - (float)delta);
 		_kickCooldownLeft = Mathf.Max(0f, _kickCooldownLeft - (float)delta);
 
-		// Face the way the player is moving so the kick swings forward.
-		if (InputEnabled && Mathf.Abs(moveAxis) > 0.1f)
-			_facing = moveAxis > 0f ? 1 : -1;
-
 		bool kickedThisFrame = false;
 		if (InputEnabled && kickPressed && _kickCooldownLeft <= 0f)
 		{
-			StartKick();
+			_kickActiveLeft   = KickActiveSeconds;
+			_kickCooldownLeft = KickCooldownSeconds;
 			kickedThisFrame = true;
 		}
 
@@ -185,6 +180,17 @@ public partial class PlayerController : CharacterBody2D
 		var p = GlobalPosition;
 		p.X = Mathf.Clamp(p.X, MinX, MaxX);
 		GlobalPosition = p;
+
+		// Foot arc: snap to kick side while button held/AI active, sweep back to rest on release
+		bool kickIsHeld = Control == ControlMode.Ai
+			? _kickActiveLeft > 0f
+			: InputEnabled && InputMap.HasAction(KickAction) && Input.IsActionPressed(KickAction);
+		float restAngle = Mathf.Pi * 0.5f;          // 6 o'clock (bottom of head)
+		float kickAngle = _kickDir > 0 ? 0f : Mathf.Pi; // 3 o'clock (P1) or 9 o'clock (P2)
+		_footAngle = kickIsHeld
+			? kickAngle
+			: Mathf.MoveToward(_footAngle, restAngle, Mathf.DegToRad(380f) * (float)delta);
+		UpdateFootTransform();
 
 		bool onFloor = IsOnFloor();
 		if (onFloor != _wasOnFloor)
@@ -243,7 +249,7 @@ public partial class PlayerController : CharacterBody2D
 			? (contactNormal + Velocity.Normalized()).Normalized()
 			: contactNormal;
 		if (kicking)
-			dir = (contactNormal + new Vector2(_facing, -0.35f)).Normalized();
+			dir = (contactNormal + new Vector2(_kickDir, -0.35f)).Normalized();
 
 		float ballAlong = ball.LinearVelocity.Dot(dir);
 		float playerInto = Mathf.Max(0f, Velocity.Dot(dir));  // player speed heading into the ball
@@ -266,34 +272,6 @@ public partial class PlayerController : CharacterBody2D
 			// drives look dynamic. Positive X kick → clockwise (positive angular vel).
 			ball.ApplyTorqueImpulse(dir.X * targetOut * ball.Mass * KickSpinFactor);
 		}
-	}
-
-	// Start a leg swing: open the "real kick" window, set the cooldown and animate the foot.
-	private void StartKick()
-	{
-		_kickActiveLeft = KickActiveSeconds;
-		_kickCooldownLeft = KickCooldownSeconds;
-		AnimateLegSwing();
-	}
-
-	private void AnimateLegSwing()
-	{
-		if (_legSprite == null)
-			return;
-
-		if (_legTween != null && _legTween.IsValid())
-			_legTween.Kill();
-
-		// The leg hangs down at rest; a swing rotates it forward (toward facing) and back.
-		_legSprite.Scale = new Vector2(_facing, 1f);
-		float swing = Mathf.DegToRad(KickSwingDegrees) * _facing;
-
-		_legSprite.Rotation = 0f;
-		_legTween = CreateTween();
-		_legTween.TweenProperty(_legSprite, "rotation", swing, KickSwingSeconds)
-			.SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
-		_legTween.TweenProperty(_legSprite, "rotation", 0f, KickSwingSeconds)
-			.SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
 	}
 
 	// While the player overlaps the ball and moves into it, bring the ball's speed
@@ -362,48 +340,47 @@ public partial class PlayerController : CharacterBody2D
 		);
 	}
 
-	// Build the swinging leg as a child Sprite2D pivoted at the hip so a swing rotates the foot
-	// forward. Sits low on the body, behind the main sprite.
-	private void CreateLeg()
+	// Foot sprite that orbits the head center on a circular arc.
+	// P1: rest = 6 o'clock (90°), kick = 3 o'clock (0°, right side).
+	// P2: rest = 6 o'clock (90°), kick = 9 o'clock (180°, left side).
+	private void CreateFoot()
 	{
-		GetNodeOrNull<Sprite2D>("Leg")?.QueueFree();
+		GetNodeOrNull<Sprite2D>("FootSprite")?.QueueFree();
 
-		int legLength = Math.Max(40, PlaceholderHeight / 4);
-		int legWidth = Math.Max(14, PlaceholderWidth / 12);
+		int footW = Math.Max(28, PlaceholderWidth  / 5);
+		int footH = Math.Max(10, PlaceholderHeight / 20);
 
-		_legSprite = new Sprite2D
+		_footSprite = new Sprite2D
 		{
-			Name = "Leg",
-			Texture = BuildLegTexture(legWidth, legLength),
-			Centered = false,
-			// Pivot at the top of the bar (the hip): origin sits at the sprite's top-centre.
-			Offset = new Vector2(-legWidth / 2f, 0f),
-			Position = new Vector2(0f, PlaceholderHeight * 0.27f),
-			ZIndex = 11 // in front of the head sprite (ZIndex 10) so the kick is visible
+			Name     = "FootSprite",
+			Texture  = PlayerSpriteFactory.BuildFootTexture(footW, footH, OutlineColor, OutlineThickness),
+			Centered = true,
+			ZIndex   = 11
 		};
-		AddChild(_legSprite);
+		AddChild(_footSprite);
+
+		_kickDir   = (_playerIndex == 0) ? 1 : -1;
+		_footAngle = Mathf.Pi * 0.5f; // start at rest
+		UpdateFootTransform();
 	}
 
-	private Texture2D BuildLegTexture(int width, int length)
+	// Reposition the foot sprite on the head-boundary arc at the current _footAngle.
+	// Also rotates the texture so the toe always faces outward (away from head center).
+	private void UpdateFootTransform()
 	{
-		Color legColor = new Color(0.96f, 0.85f, 0.70f); // generic skin-tone limb
-		Color bootColor = new Color(0.12f, 0.12f, 0.14f);
-		Color outline = OutlineColor;
+		if (_footSprite == null) return;
 
-		Image image = Image.CreateEmpty(width, length, false, Image.Format.Rgba8);
-		image.Fill(Colors.Transparent);
+		// Head center in node-local space.
+		// Matches PlayerSpriteFactory: hy=8, hh=PlaceholderHeight*0.58 → cy_image=8+hh/2
+		// Node Y = cy_image - PlaceholderHeight/2 = 8 + PlaceholderHeight*0.29 - PlaceholderHeight*0.5
+		float headCenterLocalY = 8f - PlaceholderHeight * 0.21f; // ≈ -46 for 256px
+		float armRadius        = PlaceholderHeight * 0.30f;       // ≈ 77, near head boundary
 
-		for (int y = 0; y < length; y++)
-		{
-			for (int x = 0; x < width; x++)
-			{
-				bool edge = x == 0 || x == width - 1 || y == 0 || y == length - 1;
-				Color c = edge ? outline : (y > length * 0.74f ? bootColor : legColor);
-				image.SetPixel(x, y, c);
-			}
-		}
-
-		return ImageTexture.CreateFromImage(image);
+		_footSprite.Position = new Vector2(
+			armRadius * Mathf.Cos(_footAngle),
+			headCenterLocalY + armRadius * Mathf.Sin(_footAngle)
+		);
+		_footSprite.Rotation = _footAngle;
 	}
 
 	private int DetectPlayerIndex()
