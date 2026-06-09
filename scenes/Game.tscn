@@ -78,10 +78,9 @@ collision_mask = 13
 mass = 0.5
 physics_material_override = SubResource("PhysicsMaterial_ball1")
 gravity_scale = 2.0
-lock_rotation = true
 continuous_cd = 2
 linear_damp = 0.25
-angular_damp = 1.0
+angular_damp = 0.5
 script = ExtResource("4_ball01")
 
 [node name="Sprite2D" type="Sprite2D" parent="Ball" unique_id=442957231]
@@ -92,19 +91,19 @@ shape = SubResource("CircleShape2D_ball1")
 
 [node name="Player1" type="CharacterBody2D" parent="." unique_id=1614461935]
 position = Vector2(650, 995)
-collision_mask = 15
+collision_mask = 14
 script = ExtResource("2_cpr0p")
 
 [node name="Sprite2D" type="Sprite2D" parent="Player1" unique_id=2090077016]
 texture = ExtResource("3_78awf")
 
-[node name="PlayerColisionArea" type="CollisionShape2D" parent="Player1" unique_id=354522304]
+[node name="PlayerCollisionShape" type="CollisionShape2D" parent="Player1" unique_id=354522304]
 scale = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_s0nni")
 
 [node name="Player2" type="CharacterBody2D" parent="." unique_id=2088789380]
 position = Vector2(1733, 988)
-collision_mask = 15
+collision_mask = 14
 script = ExtResource("2_cpr0p")
 LeftAction = "Player2_Left"
 RightAction = "Player2_Right"
@@ -114,7 +113,7 @@ KickAction = "Player2_Kick"
 [node name="Sprite2D" type="Sprite2D" parent="Player2" unique_id=2051332855]
 texture = ExtResource("3_78awf")
 
-[node name="PlayerColisionArea" type="CollisionShape2D" parent="Player2" unique_id=1821566449]
+[node name="PlayerCollisionShape" type="CollisionShape2D" parent="Player2" unique_id=1821566449]
 scale = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_cpr0p")
 

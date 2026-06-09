@@ -207,6 +207,14 @@ public partial class AudioManager : Node
 		_perkSfxPlayer.Play();
 	}
 
+	public void SetMusicPaused(bool paused)
+	{
+		if (_musicPlayer == null)
+			return;
+
+		_musicPlayer.StreamPaused = paused;
+	}
+
 	public void PlayGoalScoredSound()
 	{
 		if (_goalSfxCooldown > 0)

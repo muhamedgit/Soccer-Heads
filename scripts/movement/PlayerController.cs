@@ -31,6 +31,7 @@ public partial class PlayerController : CharacterBody2D
 	[Export] public float Bounciness = 1.4f;       // how much of the ball's incoming speed is reflected
 	[Export] public float KickSpeedFactor = 1.3f;  // how much of the player's speed adds to the launch
 	[Export] public float MaxBallSpeed = 2200f;    // cap on the resulting launch speed
+	[Export] public float KickSpinFactor = 0.35f;  // torque fraction of kick impulse for ball spin
 
 	// Continuous push lets the player dribble/shove the ball while staying in contact,
 	// instead of only getting a single impulse on first touch.
@@ -259,7 +260,12 @@ public partial class PlayerController : CharacterBody2D
 		float currentOut = Mathf.Max(0f, ballAlong);
 		float deltaV = targetOut - currentOut;
 		if (deltaV > 0f)
+		{
 			ball.ApplyCentralImpulse(dir * deltaV * ball.Mass);
+			// Impart spin proportional to the horizontal kick component so headers and
+			// drives look dynamic. Positive X kick → clockwise (positive angular vel).
+			ball.ApplyTorqueImpulse(dir.X * targetOut * ball.Mass * KickSpinFactor);
+		}
 	}
 
 	// Start a leg swing: open the "real kick" window, set the cooldown and animate the foot.
@@ -321,7 +327,7 @@ public partial class PlayerController : CharacterBody2D
 			return;
 		}
 
-		var collision = GetNodeOrNull<CollisionShape2D>("PlayerColisionArea");
+		var collision = GetNodeOrNull<CollisionShape2D>("PlayerCollisionShape");
 
 		sprite.Centered = true;
 		sprite.Position = Vector2.Zero;

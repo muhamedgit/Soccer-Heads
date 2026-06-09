@@ -55,6 +55,20 @@ theme_override_font_sizes/font_size = 24
 text = "100%"
 horizontal_alignment = 1
 
+[node name="FullscreenRow" type="HBoxContainer" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="FullscreenLabel" type="Label" parent="CenterContainer/VBoxContainer/FullscreenRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Fullscreen"
+
+[node name="FullscreenToggle" type="CheckButton" parent="CenterContainer/VBoxContainer/FullscreenRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+
 [node name="BackButton" type="Button" parent="CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(260, 50)
 layout_mode = 2

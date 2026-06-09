@@ -11,6 +11,7 @@ public partial class PauseMenu : CanvasLayer
 	private Button _mainMenuButton;
 	private GameState _gameState;
 	private SceneManager _sceneManager;
+	private AudioManager _audioManager;
 
 	public override void _Ready()
 	{
@@ -23,6 +24,7 @@ public partial class PauseMenu : CanvasLayer
 
 		_gameState = GetNode<GameState>("/root/GameState");
 		_sceneManager = GetNode<SceneManager>("/root/SceneManager");
+		_audioManager = GetNodeOrNull<AudioManager>("/root/AudioManager");
 
 		_overlay.Visible = false;
 
@@ -44,6 +46,7 @@ public partial class PauseMenu : CanvasLayer
 	{
 		GetTree().Paused = paused;
 		_overlay.Visible = paused;
+		_audioManager?.SetMusicPaused(paused);
 	}
 
 	private void OnRestartPressed()

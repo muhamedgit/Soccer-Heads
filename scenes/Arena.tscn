@@ -26,6 +26,16 @@ bounce = 0.5
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_goalshape"]
 size = Vector2(160, 320)
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_crossbar1"]
+friction = 0.05
+bounce = 0.65
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_crossbar_left"]
+size = Vector2(210, 18)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_crossbar_right"]
+size = Vector2(210, 18)
+
 [node name="Arena" type="Node2D" unique_id=2116208832]
 
 [node name="StadiumBackground" type="TextureRect" parent="." unique_id=335979531]
@@ -46,7 +56,7 @@ collision_layer = 4
 collision_mask = 3
 physics_material_override = SubResource("PhysicsMaterial_ground1")
 
-[node name="Gorund" type="CollisionShape2D" parent="Ground" unique_id=985634968]
+[node name="GroundShape" type="CollisionShape2D" parent="Ground" unique_id=985634968]
 scale = Vector2(150, 1)
 shape = SubResource("RectangleShape2D_5ftpa")
 
@@ -65,7 +75,7 @@ shape = SubResource("RectangleShape2D_rarb2")
 position = Vector2(-1106, -775)
 shape = SubResource("RectangleShape2D_u3rsd")
 
-[node name="Cealing" type="CollisionShape2D" parent="Walls" unique_id=1588596901]
+[node name="Ceiling" type="CollisionShape2D" parent="Walls" unique_id=1588596901]
 position = Vector2(-9, -1439)
 shape = SubResource("RectangleShape2D_uch3s")
 
@@ -94,3 +104,16 @@ ScoringPlayerIndex = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Goals/RightGoal"]
 shape = SubResource("RectangleShape2D_goalshape")
+
+[node name="GoalFrames" type="StaticBody2D" parent="." unique_id=100000001]
+collision_layer = 8
+collision_mask = 0
+physics_material_override = SubResource("PhysicsMaterial_crossbar1")
+
+[node name="CrossbarLeft" type="CollisionShape2D" parent="GoalFrames" unique_id=100000002]
+position = Vector2(145, 786)
+shape = SubResource("RectangleShape2D_crossbar_left")
+
+[node name="CrossbarRight" type="CollisionShape2D" parent="GoalFrames" unique_id=100000003]
+position = Vector2(2160, 786)
+shape = SubResource("RectangleShape2D_crossbar_right")
