@@ -7,7 +7,8 @@ using System;
 // then falls back to a procedural disc so the game works before first import.
 public static class PlayerSpriteFactory
 {
-	// Full in-match avatar: club kit body + the variant's human head and hair.
+	// Full in-match avatar: head-soccer style — big cartoon head with a club collar below.
+	// No torso or arms; the kicking leg is a separate Sprite2D child on the PlayerController.
 	public static Texture2D BuildPlayerTexture(
 		int width,
 		int height,
@@ -22,60 +23,38 @@ public static class PlayerSpriteFactory
 
 		Color bodyColor   = club.PrimaryColor;
 		Color accentColor = club.AccentColor;
-		Color shortsColor = Darken(bodyColor, 0.25f);
 
-		int torsoX = width / 2 - width / 5;
-		int torsoY = height / 3;
-		int torsoW = width / 5 * 2;
-		int torsoH = height / 3;
+		// Big head — nearly fills the canvas width
+		Vector2 headCenter = new Vector2(width / 2.0f, height * 0.38f);
+		float headRadius   = width * 0.43f;
 
-		int legW = width / 7;
-		int legH = height / 5;
-		int leftLegX  = width / 2 - legW - width / 18;
-		int rightLegX = width / 2 + width / 18;
-		int legY = torsoY + torsoH - outline;
+		// Club shirt collar strip peeking below the chin
+		int collarH = Mathf.RoundToInt(height * 0.14f);
+		int collarW = Mathf.RoundToInt(width  * 0.54f);
+		int collarX = width / 2 - collarW / 2;
+		int collarY = Mathf.RoundToInt(headCenter.Y + headRadius * 0.77f);
+		DrawRect(image, collarX - outline, collarY - outline, collarW + outline * 2, collarH + outline * 2, outlineColor);
+		DrawRect(image, collarX, collarY, collarW, collarH, bodyColor);
 
-		int armW = width / 10;
-		int armH = height / 4;
-		int leftArmX  = torsoX - armW + outline;
-		int rightArmX = torsoX + torsoW - outline;
-		int armY = torsoY + height / 18;
-
-		Vector2 headCenter = new Vector2(width / 2.0f, height * 0.20f);
-		float headRadius   = width * 0.17f;
-
-		DrawHumanHead(image, headCenter, headRadius, variant.SkinColor, variant.HairColor, outlineColor, outline);
-
-		DrawRect(image, leftArmX  - outline, armY - outline, armW + outline * 2, armH + outline * 2, outlineColor);
-		DrawRect(image, rightArmX - outline, armY - outline, armW + outline * 2, armH + outline * 2, outlineColor);
-		DrawRect(image, leftArmX,  armY, armW, armH, bodyColor);
-		DrawRect(image, rightArmX, armY, armW, armH, bodyColor);
-
-		DrawRect(image, torsoX - outline, torsoY - outline, torsoW + outline * 2, torsoH + outline * 2, outlineColor);
-		DrawRect(image, torsoX, torsoY, torsoW, torsoH, bodyColor);
-
-		DrawRect(image, torsoX, torsoY + torsoH - height / 12, torsoW, height / 12, shortsColor);
-
+		// Accent stripe on collar (horizontal for P1, vertical for P2)
 		if (playerIndex == 1)
 		{
-			int stripeH = Math.Max(6, height / 16);
-			DrawRect(image, torsoX + outline, torsoY + torsoH / 4, torsoW - outline * 2, stripeH, accentColor);
+			int stripeH = Math.Max(4, collarH / 4);
+			DrawRect(image, collarX + outline, collarY + collarH / 3, collarW - outline * 2, stripeH, accentColor);
 		}
 		else
 		{
-			int stripeW = Math.Max(6, width / 10);
-			DrawRect(image, width / 2 - stripeW / 2, torsoY + outline, stripeW, torsoH - outline * 2, accentColor);
+			int stripeW = Math.Max(4, collarW / 7);
+			DrawRect(image, width / 2 - stripeW / 2, collarY + outline, stripeW, collarH - outline * 2, accentColor);
 		}
 
-		DrawRect(image, leftLegX  - outline, legY - outline, legW + outline * 2, legH + outline * 2, outlineColor);
-		DrawRect(image, rightLegX - outline, legY - outline, legW + outline * 2, legH + outline * 2, outlineColor);
-		DrawRect(image, leftLegX,  legY, legW, legH, shortsColor);
-		DrawRect(image, rightLegX, legY, legW, legH, shortsColor);
+		// Head drawn on top so it overlaps and hides the collar top edge
+		DrawHumanHead(image, headCenter, headRadius, variant.SkinColor, variant.HairColor, outlineColor, outline);
 
 		return ImageTexture.CreateFromImage(image);
 	}
 
-	// Square head-and-shoulders thumbnail for the selection grid.
+	// Square head thumbnail for the selection grid — matches the in-game head-soccer style.
 	public static Texture2D BuildHeadThumbnail(
 		int size,
 		in ClubDatabase.Club club,
@@ -87,15 +66,14 @@ public static class PlayerSpriteFactory
 		Color outlineColor = new Color(0f, 0f, 0f, 1f);
 		int outline = Math.Max(2, size / 28);
 
-		int shoulderW = (int)(size * 0.62f);
-		int shoulderH = (int)(size * 0.34f);
-		int shoulderX = (size - shoulderW) / 2;
-		int shoulderY = size - shoulderH;
-		DrawRect(image, shoulderX - outline, shoulderY - outline, shoulderW + outline * 2, shoulderH + outline * 2, outlineColor);
-		DrawRect(image, shoulderX, shoulderY, shoulderW, shoulderH, club.PrimaryColor);
+		// Collar strip at the bottom edge
+		int collarH = (int)(size * 0.22f);
+		DrawRect(image, 0, size - collarH - outline, size, collarH + outline + 1, outlineColor);
+		DrawRect(image, outline, size - collarH, size - outline * 2, collarH, club.PrimaryColor);
 
-		Vector2 headCenter = new Vector2(size * 0.5f, size * 0.42f);
-		float headRadius   = size * 0.30f;
+		// Big head overlapping the collar
+		Vector2 headCenter = new Vector2(size * 0.5f, size * 0.45f);
+		float headRadius   = size * 0.38f;
 		DrawHumanHead(image, headCenter, headRadius, variant.SkinColor, variant.HairColor, outlineColor, outline);
 
 		return ImageTexture.CreateFromImage(image);
@@ -154,6 +132,15 @@ public static class PlayerSpriteFactory
 		Color outlineColor,
 		int outline)
 	{
+		// Ears — drawn BEFORE the head circle so the head naturally covers their inner edge,
+		// making them look like they're attached at the sides.
+		float earY = center.Y + radius * 0.06f;
+		float earR = radius * 0.16f;
+		DrawFilledCircle(image, new Vector2(center.X - radius, earY), earR + outline, outlineColor);
+		DrawFilledCircle(image, new Vector2(center.X + radius, earY), earR + outline, outlineColor);
+		DrawFilledCircle(image, new Vector2(center.X - radius, earY), earR, skin);
+		DrawFilledCircle(image, new Vector2(center.X + radius, earY), earR, skin);
+
 		// 1. Black outline
 		DrawFilledCircle(image, center, radius + outline, outlineColor);
 		// 2. Skin
