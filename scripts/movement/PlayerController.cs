@@ -56,10 +56,11 @@ public partial class PlayerController : CharacterBody2D
 	private float _kickActiveLeft;   // > 0 while the kick boost window is open
 	private float _kickCooldownLeft; // > 0 while a new kick is blocked
 	private int   _kickDir = 1;      // +1 = P1 kicks right, -1 = P2 kicks left (set in CreateFoot)
-	private Sprite2D    _footSprite;
-	private Area2D      _footArea;
-	private RigidBody2D _footKickAppliedTo; // prevents double-kick within one kick window
-	private float _footAngle;               // current arc angle in radians (π/2 = 6-o'clock rest)
+	private Sprite2D         _footSprite;
+	private AnimatableBody2D _footBody;              // always-on physical collider
+	private Area2D           _footArea;              // kick-boost detection only
+	private RigidBody2D      _footKickAppliedTo;
+	private float _footAngle;                        // current arc angle in radians (π/2 = 6-o'clock rest)
 
 	private GameState _gameState;
 	private int _playerIndex;
@@ -195,36 +196,26 @@ public partial class PlayerController : CharacterBody2D
 			: Mathf.MoveToward(_footAngle, restAngle, Mathf.DegToRad(380f) * (float)delta);
 		UpdateFootTransform();
 
-		// Poll foot-ball overlap every frame — reliable even when the foot teleports.
+		// Area2D detects ball proximity for kick boost — physical collision is
+		// handled entirely by _footBody (AnimatableBody2D) every frame.
 		if (_footArea != null)
 		{
 			if (_kickActiveLeft <= 0f)
 				_footKickAppliedTo = null;
 
-			foreach (var overlapBody in _footArea.GetOverlappingBodies())
+			if (_kickActiveLeft > 0f)
 			{
-				if (overlapBody is not RigidBody2D footBall || !footBall.IsInGroup("ball"))
-					continue;
-
-				// Hard physical barrier: cancel all ball velocity into the foot + spring push.
-				// This runs every frame regardless of kick state so the foot never clips the ball.
-				Vector2 footWorld = ToGlobal(_footSprite.Position);
-				Vector2 awayDir   = footBall.GlobalPosition - footWorld;
-				awayDir = awayDir.LengthSquared() > 0.01f
-					? awayDir.Normalized()
-					: (_kickDir > 0 ? Vector2.Right : Vector2.Left);
-
-				float intoFoot = Mathf.Max(0f, -footBall.LinearVelocity.Dot(awayDir));
-				footBall.ApplyCentralImpulse(awayDir * (intoFoot + 1200f * (float)delta) * footBall.Mass);
-
-				// Kick boost: once per kick window on top of the barrier impulse.
-				if (_kickActiveLeft > 0f && footBall != _footKickAppliedTo)
+				foreach (var overlapBody in _footArea.GetOverlappingBodies())
 				{
-					ApplyKickImpulse(footBall);
-					_footKickAppliedTo = footBall;
+					if (overlapBody is not RigidBody2D footBall || !footBall.IsInGroup("ball"))
+						continue;
+					if (footBall != _footKickAppliedTo)
+					{
+						ApplyKickImpulse(footBall);
+						_footKickAppliedTo = footBall;
+					}
+					break;
 				}
-
-				break;
 			}
 		}
 
@@ -382,10 +373,11 @@ public partial class PlayerController : CharacterBody2D
 	private void CreateFoot()
 	{
 		GetNodeOrNull<Sprite2D>("FootSprite")?.QueueFree();
+		GetNodeOrNull<AnimatableBody2D>("FootBody")?.QueueFree();
 		GetNodeOrNull<Area2D>("FootArea")?.QueueFree();
 
 		int footW = Math.Max(48, PlaceholderWidth  / 3);
-		int footH = Math.Max(20, PlaceholderHeight / 9); // taller = thicker shoe
+		int footH = Math.Max(20, PlaceholderHeight / 9);
 
 		_footSprite = new Sprite2D
 		{
@@ -396,52 +388,58 @@ public partial class PlayerController : CharacterBody2D
 		};
 		AddChild(_footSprite);
 
-		// Collision area follows the foot sprite so the ball can be kicked by the foot.
+		// AnimatableBody2D on the same collision layer as the player so the ball
+		// physically bounces off the foot just as it does off the player body.
+		_footBody = new AnimatableBody2D { Name = "FootBody", SyncToPhysics = false };
+		_footBody.CollisionLayer = CollisionLayer; // inherit player layer → ball already sees it
+		_footBody.CollisionMask  = 0;             // foot doesn't actively detect anything
+		_footBody.AddChild(new CollisionShape2D
+		{
+			Shape = new RectangleShape2D { Size = new Vector2(footW, footH) }
+		});
+		AddChild(_footBody);
+
+		// Area2D used only to detect ball proximity for the kick-boost impulse.
 		_footArea = new Area2D { Name = "FootArea" };
 		_footArea.CollisionLayer = 0;
-		_footArea.CollisionMask  = 1u << 1; // layer 2 = ball
-		// Detection shape is slightly larger than the visual foot so the barrier
-		// impulse fires before the ball visually overlaps the sprite.
+		_footArea.CollisionMask  = 1u << 1; // ball layer 2
 		_footArea.AddChild(new CollisionShape2D
 		{
-			Shape = new RectangleShape2D { Size = new Vector2(footW + 10, footH + 10) }
+			Shape = new RectangleShape2D { Size = new Vector2(footW + 12, footH + 12) }
 		});
 		AddChild(_footArea);
 
 		_kickDir   = (_playerIndex == 0) ? 1 : -1;
-		_footAngle = Mathf.Pi * 0.5f; // start at rest
+		_footAngle = Mathf.Pi * 0.5f;
 		UpdateFootTransform();
 	}
 
 
-	// Reposition the foot sprite (and its collision area) on the head-boundary arc.
-	// Rotation tracks the sweep so the toe is horizontal at rest and points up at full kick.
+	// Reposition the foot on the orbit arc. Rotation = _footAngle (radial/outward),
+	// so the toe always points away from the head center — toe-first at every position.
 	private void UpdateFootTransform()
 	{
 		if (_footSprite == null) return;
 
-		// Head center in node-local space.
-		// Matches PlayerSpriteFactory: hy=8, hh=PlaceholderHeight*0.58 → cy_image=8+hh/2
-		// Node Y = cy_image - PlaceholderHeight/2 = 8 + PlaceholderHeight*0.29 - PlaceholderHeight*0.5
 		float headCenterLocalY = 8f - PlaceholderHeight * 0.21f;
-		float armRadius        = PlaceholderHeight * 0.46f; // outside head boundary
-		// Shift orbit center toward the kick side so the foot hangs in front of the player.
+		float armRadius        = PlaceholderHeight * 0.46f;
 		float orbitOffsetX     = _kickDir * PlaceholderWidth * 0.10f;
 
 		var pos = new Vector2(
 			orbitOffsetX + armRadius * Mathf.Cos(_footAngle),
 			headCenterLocalY + armRadius * Mathf.Sin(_footAngle)
 		);
-
-		// Toe points right at texture 0°.
-		// P1: flat (0°) at rest (π/2), toe down (+π/2) at kick (0). Formula: π/2 - angle.
-		// P2: flat (π) at rest (π/2), toe down (+π/2) at kick (π). Formula: 3π/2 - angle.
-		float rot = _kickDir > 0
-			? Mathf.Pi * 0.5f - _footAngle
-			: Mathf.Pi * 1.5f - _footAngle;
+		float rot = _footAngle; // radial: toe points outward from head center
 
 		_footSprite.Position = pos;
 		_footSprite.Rotation = rot;
+
+		// Physical body: must be set in world space so Jolt sees it correctly.
+		if (_footBody != null)
+		{
+			_footBody.GlobalPosition = GlobalPosition + pos;
+			_footBody.GlobalRotation = GlobalRotation + rot;
+		}
 
 		if (_footArea != null)
 		{
