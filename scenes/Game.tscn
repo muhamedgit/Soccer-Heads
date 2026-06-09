@@ -3,38 +3,279 @@
 [ext_resource type="PackedScene" uid="uid://c1uh584b8lft" path="res://scenes/Arena.tscn" id="1_cpr0p"]
 [ext_resource type="Script" uid="uid://dicmur4dagsry" path="res://scripts/movement/PlayerController.cs" id="2_cpr0p"]
 [ext_resource type="Texture2D" uid="uid://d4is5wxujerna" path="res://icon.svg" id="3_78awf"]
+[ext_resource type="Script" uid="uid://dmbk8fqevf7wa" path="res://scripts/ball/Ball.cs" id="4_ball01"]
+[ext_resource type="Script" uid="uid://d0rt74by6qofx" path="res://scripts/core/MatchController.cs" id="5_matchcontroller"]
+[ext_resource type="Script" uid="uid://by3574jl8q5at" path="res://scripts/ui/ScoreHud.cs" id="6_scorehud"]
+[ext_resource type="Script" path="res://scripts/ui/PauseMenu.cs" id="7_pausemenu"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ball1"]
+friction = 0.1
+bounce = 0.6
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ball1"]
+radius = 32.0
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_s0nni"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cpr0p"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_score_panel"]
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+bg_color = Color(0.0352941, 0.0470588, 0.0784314, 0.84)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.16)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_score_chip"]
+content_margin_left = 12.0
+content_margin_top = 3.0
+content_margin_right = 12.0
+content_margin_bottom = 3.0
+bg_color = Color(1, 1, 1, 0.08)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_timer_panel"]
+content_margin_left = 14.0
+content_margin_top = 4.0
+content_margin_right = 14.0
+content_margin_bottom = 4.0
+bg_color = Color(0.0352941, 0.0470588, 0.0784314, 0.84)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.16)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.28)
+shadow_size = 8
+
 [node name="MainGameScene" type="Node2D" unique_id=72174549]
+script = ExtResource("5_matchcontroller")
 
 [node name="Arena" parent="." unique_id=2116208832 instance=ExtResource("1_cpr0p")]
 
-[node name="Player1" type="CharacterBody2D" parent="." unique_id=1614461935]
-position = Vector2(149, 1016)
+[node name="Ball" type="RigidBody2D" parent="." unique_id=442957230]
+position = Vector2(1152, 800)
+collision_layer = 2
 collision_mask = 13
+mass = 0.5
+physics_material_override = SubResource("PhysicsMaterial_ball1")
+gravity_scale = 2.0
+continuous_cd = 2
+linear_damp = 0.25
+angular_damp = 0.5
+script = ExtResource("4_ball01")
+
+[node name="Sprite2D" type="Sprite2D" parent="Ball" unique_id=442957231]
+texture = ExtResource("3_78awf")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ball" unique_id=442957232]
+shape = SubResource("CircleShape2D_ball1")
+
+[node name="Player1" type="CharacterBody2D" parent="." unique_id=1614461935]
+position = Vector2(650, 995)
+collision_mask = 14
 script = ExtResource("2_cpr0p")
 
 [node name="Sprite2D" type="Sprite2D" parent="Player1" unique_id=2090077016]
 texture = ExtResource("3_78awf")
 
-[node name="PlayerColisionArea" type="CollisionShape2D" parent="Player1" unique_id=354522304]
+[node name="PlayerCollisionShape" type="CollisionShape2D" parent="Player1" unique_id=354522304]
 scale = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_s0nni")
 
 [node name="Player2" type="CharacterBody2D" parent="." unique_id=2088789380]
-position = Vector2(1800, 993)
-collision_mask = 13
+position = Vector2(1733, 988)
+collision_mask = 14
 script = ExtResource("2_cpr0p")
 LeftAction = "Player2_Left"
 RightAction = "Player2_Right"
 JumpAction = "Player2_Jump"
+KickAction = "Player2_Kick"
 
 [node name="Sprite2D" type="Sprite2D" parent="Player2" unique_id=2051332855]
 texture = ExtResource("3_78awf")
 
-[node name="PlayerColisionArea" type="CollisionShape2D" parent="Player2" unique_id=1821566449]
+[node name="PlayerCollisionShape" type="CollisionShape2D" parent="Player2" unique_id=1821566449]
 scale = Vector2(6, 4)
 shape = SubResource("CapsuleShape2D_cpr0p")
+
+[node name="ScoreHud" type="CanvasLayer" parent="." unique_id=796546050]
+script = ExtResource("6_scorehud")
+
+[node name="HudRoot" type="Control" parent="ScoreHud" unique_id=1007487642]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 138.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="ScorePanel" type="PanelContainer" parent="ScoreHud/HudRoot" unique_id=2013080984]
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -215.0
+offset_top = 18.0
+offset_right = 215.0
+offset_bottom = 86.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_score_panel")
+
+[node name="ScoreRow" type="HBoxContainer" parent="ScoreHud/HudRoot/ScorePanel" unique_id=482358368]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="PlayerOneChip" type="PanelContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow" unique_id=1557309878]
+custom_minimum_size = Vector2(104, 42)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_score_chip")
+
+[node name="PlayerOneText" type="VBoxContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerOneChip" unique_id=796969378]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="PlayerOneName" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerOneChip/PlayerOneText" unique_id=571464048]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.498039, 0.768627, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "PLAYER 1"
+horizontal_alignment = 1
+
+[node name="PlayerOneScore" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow" unique_id=1740175338]
+custom_minimum_size = Vector2(54, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 38
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Separator" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow" unique_id=1174249059]
+custom_minimum_size = Vector2(22, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.42)
+theme_override_font_sizes/font_size = 32
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PlayerTwoScore" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow" unique_id=683215483]
+custom_minimum_size = Vector2(54, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 38
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PlayerTwoChip" type="PanelContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow" unique_id=2131729155]
+custom_minimum_size = Vector2(104, 42)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_score_chip")
+
+[node name="PlayerTwoText" type="VBoxContainer" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerTwoChip" unique_id=480824811]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="PlayerTwoName" type="Label" parent="ScoreHud/HudRoot/ScorePanel/ScoreRow/PlayerTwoChip/PlayerTwoText" unique_id=1262414326]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.52549, 0.482353, 1)
+theme_override_font_sizes/font_size = 11
+text = "PLAYER 2"
+horizontal_alignment = 1
+
+[node name="TimerPanel" type="PanelContainer" parent="ScoreHud/HudRoot" unique_id=494136903]
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -62.0
+offset_top = 92.0
+offset_right = 62.0
+offset_bottom = 128.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_timer_panel")
+
+[node name="TimerLabel" type="Label" parent="ScoreHud/HudRoot/TimerPanel" unique_id=2039442341]
+custom_minimum_size = Vector2(96, 24)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.92)
+theme_override_font_sizes/font_size = 22
+text = "01:30"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+process_mode = 3
+script = ExtResource("7_pausemenu")
+
+[node name="Overlay" type="Control" parent="PauseMenu"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="PauseMenu/Overlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="CenterContainer" type="CenterContainer" parent="PauseMenu/Overlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PauseMenu/Overlay/CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="TitleLabel" type="Label" parent="PauseMenu/Overlay/CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Paused"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="PauseMenu/Overlay/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(260, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Resume"
+
+[node name="RestartButton" type="Button" parent="PauseMenu/Overlay/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(260, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Restart"
+
+[node name="MainMenuButton" type="Button" parent="PauseMenu/Overlay/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(260, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Main Menu"
