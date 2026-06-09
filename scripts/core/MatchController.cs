@@ -226,14 +226,16 @@ public partial class MatchController : Node2D
 		}
 	}
 
-	// Ball is considered out of bounds if it travels more than 400 px outside the
-	// 2304x1536 viewport in any direction. On escape it is silently teleported back
-	// to the kickoff spot — no goal is scored, no countdown is triggered.
-	private const float OobMargin = 400f;
-	private const float OobMinX = -OobMargin;
-	private const float OobMaxX = 2304f + OobMargin;
-	private const float OobMinY = -OobMargin;
-	private const float OobMaxY = 1536f + OobMargin;
+	// Behind-goal threshold: 50 px past the goal line counts as "out behind the goal".
+	// The ball resets to the centre of the half it exited from — left or right — so
+	// possession transfers spatially (like a goal kick). Y-axis escapes still go back
+	// to the kickoff spot. The check is skipped during resets and countdowns so a
+	// scored goal cannot accidentally trigger a second reset.
+	private const float BehindGoalThreshold = 50f;
+	private const float ArenaWidth          = 2304f;
+	private const float OobMarginY          = 400f;
+	private const float OobMinY             = -OobMarginY;
+	private const float OobMaxY             = 1536f + OobMarginY;
 
 	private void CheckBallOutOfBounds()
 	{
@@ -241,9 +243,27 @@ public partial class MatchController : Node2D
 			return;
 
 		var pos = _ball.GlobalPosition;
-		if (pos.X < OobMinX || pos.X > OobMaxX || pos.Y < OobMinY || pos.Y > OobMaxY)
+
+		// Ball went behind the LEFT goal → reset to left half centre
+		if (pos.X < -BehindGoalThreshold)
 		{
-			GD.PushWarning($"Ball escaped the field at {pos} — resetting to kickoff.");
+			GD.PushWarning($"Ball behind left goal at {pos} — resetting to left half.");
+			_ball.ResetTo(new Vector2(ArenaWidth * 0.25f, _ballStartPosition.Y));
+			return;
+		}
+
+		// Ball went behind the RIGHT goal → reset to right half centre
+		if (pos.X > ArenaWidth + BehindGoalThreshold)
+		{
+			GD.PushWarning($"Ball behind right goal at {pos} — resetting to right half.");
+			_ball.ResetTo(new Vector2(ArenaWidth * 0.75f, _ballStartPosition.Y));
+			return;
+		}
+
+		// Ball escaped top or bottom — reset to kickoff
+		if (pos.Y < OobMinY || pos.Y > OobMaxY)
+		{
+			GD.PushWarning($"Ball escaped field vertically at {pos} — resetting to kickoff.");
 			_ball.ResetTo(_ballStartPosition);
 		}
 	}

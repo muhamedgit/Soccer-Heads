@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <clipPath id="lfc_clip"><circle cx="100" cy="100" r="90"/></clipPath>
+  </defs>
+  <!-- Outer dark red border -->
+  <circle cx="100" cy="100" r="98" fill="#8B0000"/>
+  <!-- Main red field -->
+  <circle cx="100" cy="100" r="90" fill="#C8102E"/>
+  <!-- Flame / torch (Hillsborough memorial eternal flame) -->
+  <!-- Flame outer -->
+  <ellipse cx="100" cy="130" rx="16" ry="22" fill="#FF8C00"/>
+  <!-- Flame inner -->
+  <ellipse cx="100" cy="126" rx="10" ry="16" fill="#FFD700"/>
+  <!-- Flame core -->
+  <ellipse cx="100" cy="122" rx="5" ry="9" fill="#FFFFFF"/>
+  <!-- Liver bird (stylised) -->
+  <!-- Body -->
+  <ellipse cx="100" cy="82" rx="16" ry="22" fill="#F6EB61"/>
+  <!-- Wing left -->
+  <path d="M84,74 Q62,62 58,80 Q74,74 84,88 Z" fill="#F6EB61"/>
+  <!-- Wing right -->
+  <path d="M116,74 Q138,62 142,80 Q126,74 116,88 Z" fill="#F6EB61"/>
+  <!-- Head -->
+  <circle cx="100" cy="60" r="14" fill="#F6EB61"/>
+  <!-- Beak -->
+  <polygon points="111,59 124,62 111,66" fill="#E8A000"/>
+  <!-- Eye -->
+  <circle cx="107" cy="58" r="3.5" fill="#C8102E"/>
+  <!-- Crest feathers on head -->
+  <path d="M96,50 Q100,40 104,50" stroke="#E8A000" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M92,52 Q96,42 100,52" stroke="#E8A000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Top banner -->
+  <rect x="10" y="10" width="180" height="32" fill="#8B0000" clip-path="url(#lfc_clip)"/>
+  <text x="100" y="32" text-anchor="middle" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="16" fill="#F6EB61">LIVERPOOL</text>
+  <!-- Bottom banner -->
+  <rect x="10" y="158" width="180" height="32" fill="#8B0000" clip-path="url(#lfc_clip)"/>
+  <text x="100" y="178" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="12" fill="#F6EB61">FC 1892</text>
+</svg>

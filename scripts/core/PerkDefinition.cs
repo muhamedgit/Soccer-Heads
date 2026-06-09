@@ -11,4 +11,5 @@ public class PerkDefinition
 	public Color Color;
 	public float Duration;
 	public Func<PlayerController, PerkRestore> Apply;
+	public string IconPath; // res:// path to SVG icon (loaded after editor import)
 }

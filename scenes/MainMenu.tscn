@@ -25,55 +25,55 @@ theme_override_constants/separation = 18
 
 [node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=892214295]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 72
 text = "Soccer Heads"
 horizontal_alignment = 1
 
 [node name="PlayButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1336005271]
-custom_minimum_size = Vector2(260, 50)
+custom_minimum_size = Vector2(380, 78)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 32
 text = "Play"
 
 [node name="ModeButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(260, 50)
+custom_minimum_size = Vector2(380, 78)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 32
 text = "Mode: 2 Players"
 
 [node name="DifficultyButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(260, 50)
+custom_minimum_size = Vector2(380, 78)
 layout_mode = 2
 disabled = true
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 26
 text = "AI: Normal"
 
 [node name="ScoreLimitButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(260, 50)
+custom_minimum_size = Vector2(380, 78)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 32
 text = "Score: 5"
 
 [node name="MatchLengthButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(260, 50)
+custom_minimum_size = Vector2(380, 78)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 32
 text = "Time: 1:30"
 
 [node name="InstructionsButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1286079898]
-custom_minimum_size = Vector2(260, 50)
+custom_minimum_size = Vector2(380, 78)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 32
 text = "Instructions"
 
 [node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(260, 50)
+custom_minimum_size = Vector2(380, 78)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 32
 text = "Settings"
 
 [node name="QuitButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=687179391]
-custom_minimum_size = Vector2(260, 50)
+custom_minimum_size = Vector2(380, 78)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 32
 text = "Quit"

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <clipPath id="afc_clip"><circle cx="100" cy="100" r="90"/></clipPath>
+  </defs>
+  <!-- Outer border -->
+  <circle cx="100" cy="100" r="98" fill="#9B1C20"/>
+  <!-- Main red field -->
+  <circle cx="100" cy="100" r="90" fill="#EF0107"/>
+  <!-- Top banner -->
+  <rect x="10" y="10" width="180" height="38" fill="#9B1C20" clip-path="url(#afc_clip)"/>
+  <text x="100" y="36" text-anchor="middle" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="18" fill="#FFFFFF">ARSENAL</text>
+  <!-- Cannon barrel -->
+  <rect x="48" y="90" width="104" height="22" rx="11" fill="#FFFFFF"/>
+  <!-- Cannon body (breech) -->
+  <rect x="44" y="84" width="46" height="34" rx="8" fill="#DDDDDD"/>
+  <!-- Muzzle flash ring -->
+  <circle cx="152" cy="101" r="8" fill="#CCCCCC"/>
+  <!-- Wheel left -->
+  <circle cx="72" cy="122" r="15" fill="#FFFFFF" stroke="#CCCCCC" stroke-width="2"/>
+  <circle cx="72" cy="122" r="5" fill="#EF0107"/>
+  <!-- Wheel right -->
+  <circle cx="112" cy="122" r="15" fill="#FFFFFF" stroke="#CCCCCC" stroke-width="2"/>
+  <circle cx="112" cy="122" r="5" fill="#EF0107"/>
+  <!-- Axle connecting wheels -->
+  <rect x="72" y="119" width="40" height="4" fill="#CCCCCC"/>
+  <!-- Bottom label -->
+  <rect x="10" y="152" width="180" height="28" fill="#9B1C20" clip-path="url(#afc_clip)"/>
+  <text x="100" y="171" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="13" fill="#FFFFFF">F.C. 1886</text>
+</svg>

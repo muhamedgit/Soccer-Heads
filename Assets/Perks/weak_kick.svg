@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Gray background -->
+  <circle cx="50" cy="50" r="48" fill="#424242"/>
+  <circle cx="50" cy="50" r="44" fill="#616161"/>
+  <!-- Boot shape -->
+  <path d="M22,38 L22,68 Q22,76 30,76 L74,76 Q80,76 80,68 L58,68 L58,38 Z" fill="#9E9E9E"/>
+  <!-- Boot sole detail -->
+  <rect x="22" y="72" width="58" height="7" rx="3.5" fill="#757575"/>
+  <!-- Red X over boot (broken/weak kick) -->
+  <line x1="26" y1="40" x2="76" y2="74" stroke="#FF5252" stroke-width="9" stroke-linecap="round"/>
+  <line x1="76" y1="40" x2="26" y2="74" stroke="#FF5252" stroke-width="9" stroke-linecap="round"/>
+</svg>

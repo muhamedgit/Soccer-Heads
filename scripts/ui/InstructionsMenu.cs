@@ -8,6 +8,8 @@ public partial class InstructionsMenu : Control
 	{
 		GD.Print("InstructionsMenu script loaded.");
 
+		UiTheme.Apply(this);
+
 		_backButton = GetNode<Button>("MarginContainer/VBoxContainer/BackButton");
 		_backButton.Pressed += OnBackPressed;
 	}
