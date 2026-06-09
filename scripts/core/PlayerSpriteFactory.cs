@@ -27,39 +27,8 @@ public static class PlayerSpriteFactory
 		DrawRoundedHead(image, hx, hy, hw, hh, hr,
 			variant.SkinColor, variant.HairColor, outlineColor, outline);
 
-		// Club body stub — small rectangle below the chin (partially behind the head)
-		float bw = width  * 0.45f;
-		float bh = height * 0.17f;
-		float bx = width  / 2f - bw / 2f;
-		float by = hy + hh - outline * 2f;
-
-		DrawRect(image,
-			Mathf.RoundToInt(bx - outline), Mathf.RoundToInt(by - outline),
-			Mathf.RoundToInt(bw + outline * 2), Mathf.RoundToInt(bh + outline * 2),
-			outlineColor);
-		DrawRect(image,
-			Mathf.RoundToInt(bx), Mathf.RoundToInt(by),
-			Mathf.RoundToInt(bw), Mathf.RoundToInt(bh),
-			club.PrimaryColor);
-
-		// Accent stripe on body (horizontal for P1, vertical for P2)
-		if (playerIndex == 1)
-		{
-			int sh = Math.Max(4, Mathf.RoundToInt(bh / 4));
-			DrawRect(image,
-				Mathf.RoundToInt(bx + outline), Mathf.RoundToInt(by + bh / 3),
-				Mathf.RoundToInt(bw - outline * 2), sh,
-				club.AccentColor);
-		}
-		else
-		{
-			int sw = Math.Max(4, Mathf.RoundToInt(bw / 7));
-			DrawRect(image,
-				width / 2 - sw / 2, Mathf.RoundToInt(by + outline),
-				sw, Mathf.RoundToInt(bh - outline * 2),
-				club.AccentColor);
-		}
-
+		// Head-only avatar (Soccer Heads style): no body/jersey stub. The kicking foot is
+		// the only other limb and is a separate Sprite2D child on PlayerController.
 		return ImageTexture.CreateFromImage(image);
 	}
 
@@ -88,37 +57,49 @@ public static class PlayerSpriteFactory
 		return ImageTexture.CreateFromImage(image);
 	}
 
-	// Boot texture for the kick foot. Toe points RIGHT in its natural orientation (0° rotation).
-	// The outline and body use DrawRoundedRect; a lighter sole strip runs along the bottom.
+	// Side-view football boot. Toe points RIGHT in its natural orientation (0° rotation),
+	// the heel/ankle rises at the LEFT, and a pale sole runs along the bottom — so when the
+	// foot rests flat it clearly reads as a foot, and the toe leads when it swings up.
 	public static Texture2D BuildFootTexture(int width, int height, Color outlineColor, int outline)
 	{
 		Image image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
 		image.Fill(Colors.Transparent);
 
-		Color bootBody = new Color(0.14f, 0.11f, 0.10f);
-		Color bootSole = new Color(0.88f, 0.84f, 0.76f);
-		Color laceStrip = new Color(1f, 1f, 1f, 0.55f);
-		float r = height * 0.38f;
+		Color bootBody = new Color(0.16f, 0.13f, 0.12f);
+		Color bootSole = new Color(0.93f, 0.91f, 0.85f);
+		Color laces    = new Color(1f, 1f, 1f, 0.70f);
 
-		// Outline shell + dark body
-		DrawRoundedRect(image, 0, 0, (float)width, (float)height, r, outlineColor);
-		DrawRoundedRect(image, (float)outline, (float)outline,
-			width - outline * 2f, height - outline * 2f, r, bootBody);
+		// Foot body sits in the lower part; the ankle nub rises above it at the heel side.
+		float footTop = height * 0.34f;
+		float footH   = height - footTop;
+		float footR   = footH * 0.48f;        // rounds the toe (right) and heel (left)
 
-		// Thick sole strip at the bottom (football-shoe cleat ridge)
-		int soleH = Math.Max(5, height / 4);
-		DrawRoundedRect(image,
-			(float)outline, height - outline - soleH,
-			width - outline * 2f, (float)soleH,
-			r * 0.30f, bootSole);
+		float ankleW  = width * 0.34f;        // shin/ankle stub at the heel (left)
+		float ankleH  = footTop + footH * 0.45f;
+		float ankleR  = ankleW * 0.45f;
 
-		// Thin lace highlight across the upper
-		int laceH = Math.Max(2, height / 8);
-		int laceY = outline + (height - outline * 2 - soleH) / 3;
-		DrawRoundedRect(image,
-			outline * 2f, (float)laceY,
-			width - outline * 4f, (float)laceH,
-			r * 0.20f, laceStrip);
+		// Outline (slightly enlarged shapes drawn underneath the fills)
+		DrawRoundedRect(image, -outline, footTop - outline,
+			width + outline * 2f, footH + outline * 2f, footR + outline, outlineColor);
+		DrawRoundedRect(image, -outline, -outline,
+			ankleW + outline * 2f, ankleH + outline * 2f, ankleR + outline, outlineColor);
+
+		// Dark upper: foot + ankle
+		DrawRoundedRect(image, 0, footTop, width, footH, footR, bootBody);
+		DrawRoundedRect(image, 0, 0, ankleW, ankleH, ankleR, bootBody);
+
+		// Pale sole along the bottom
+		int soleH = Math.Max(4, Mathf.RoundToInt(footH * 0.30f));
+		DrawRoundedRect(image, outline, height - soleH - outline,
+			width - outline * 2f, soleH, footR * 0.5f, bootSole);
+
+		// Lace marks on the instep (between the ankle and the toe)
+		int laceH  = Math.Max(2, height / 12);
+		int laceY  = Mathf.RoundToInt(footTop + footH * 0.16f);
+		int laceX0 = Mathf.RoundToInt(ankleW * 0.85f);
+		int laceX1 = Mathf.RoundToInt(width * 0.80f);
+		for (int lx = laceX0; lx < laceX1; lx += laceH + 3)
+			DrawRect(image, lx, laceY, Math.Max(2, laceH - 1), laceH, laces);
 
 		return ImageTexture.CreateFromImage(image);
 	}
