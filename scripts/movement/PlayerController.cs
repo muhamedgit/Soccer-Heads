@@ -206,25 +206,24 @@ public partial class PlayerController : CharacterBody2D
 				if (overlapBody is not RigidBody2D footBall || !footBall.IsInGroup("ball"))
 					continue;
 
+				// Hard physical barrier: cancel all ball velocity into the foot + spring push.
+				// This runs every frame regardless of kick state so the foot never clips the ball.
+				Vector2 footWorld = ToGlobal(_footSprite.Position);
+				Vector2 awayDir   = footBall.GlobalPosition - footWorld;
+				awayDir = awayDir.LengthSquared() > 0.01f
+					? awayDir.Normalized()
+					: (_kickDir > 0 ? Vector2.Right : Vector2.Left);
+
+				float intoFoot = Mathf.Max(0f, -footBall.LinearVelocity.Dot(awayDir));
+				footBall.ApplyCentralImpulse(awayDir * (intoFoot + 1200f * (float)delta) * footBall.Mass);
+
+				// Kick boost: once per kick window on top of the barrier impulse.
 				if (_kickActiveLeft > 0f && footBall != _footKickAppliedTo)
 				{
-					// First touch this kick window: boosted launch.
 					ApplyKickImpulse(footBall);
 					_footKickAppliedTo = footBall;
 				}
-				else
-				{
-					// Foot not kicking but overlapping: push ball away to prevent clipping.
-					Vector2 footWorld = ToGlobal(_footSprite.Position);
-					Vector2 pushDir   = (footBall.GlobalPosition - footWorld);
-					if (pushDir.LengthSquared() > 0.01f)
-					{
-						pushDir = pushDir.Normalized();
-						float closing = Mathf.Max(0f, -footBall.LinearVelocity.Dot(pushDir));
-						if (closing > 5f)
-							footBall.ApplyCentralImpulse(pushDir * closing * footBall.Mass * 0.9f);
-					}
-				}
+
 				break;
 			}
 		}
@@ -401,9 +400,11 @@ public partial class PlayerController : CharacterBody2D
 		_footArea = new Area2D { Name = "FootArea" };
 		_footArea.CollisionLayer = 0;
 		_footArea.CollisionMask  = 1u << 1; // layer 2 = ball
+		// Detection shape is slightly larger than the visual foot so the barrier
+		// impulse fires before the ball visually overlaps the sprite.
 		_footArea.AddChild(new CollisionShape2D
 		{
-			Shape = new RectangleShape2D { Size = new Vector2(footW, footH) }
+			Shape = new RectangleShape2D { Size = new Vector2(footW + 10, footH + 10) }
 		});
 		AddChild(_footArea);
 
@@ -433,10 +434,10 @@ public partial class PlayerController : CharacterBody2D
 		);
 
 		// Toe points right at texture 0°.
-		// P1: flat (0°) at rest (π/2), špic up (-π/2) at kick (0). Formula: angle - π/2.
-		// P2: flat (π) at rest (π/2), špic up (π/2) at kick (π). Formula: 3π/2 - angle.
+		// P1: flat (0°) at rest (π/2), toe down (+π/2) at kick (0). Formula: π/2 - angle.
+		// P2: flat (π) at rest (π/2), toe down (+π/2) at kick (π). Formula: 3π/2 - angle.
 		float rot = _kickDir > 0
-			? _footAngle - Mathf.Pi * 0.5f
+			? Mathf.Pi * 0.5f - _footAngle
 			: Mathf.Pi * 1.5f - _footAngle;
 
 		_footSprite.Position = pos;
