@@ -109,6 +109,7 @@ script = ExtResource("2_cpr0p")
 LeftAction = "Player2_Left"
 RightAction = "Player2_Right"
 JumpAction = "Player2_Jump"
+KickAction = "Player2_Kick"
 
 [node name="Sprite2D" type="Sprite2D" parent="Player2" unique_id=2051332855]
 texture = ExtResource("3_78awf")

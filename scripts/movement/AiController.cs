@@ -40,6 +40,7 @@ public class AiController
 	private float _jumpTimingError;  // s jitter on the jump lead window
 	private float _standOffset;      // px it stands off the ball to aim the contact
 	private float _perkStrength;     // 0..1 how strongly it chases/avoids perks
+	private float _kickSkill;        // 0..1 how reliably it triggers the leg-kick when in range
 
 	// Tuning constants shared across difficulties.
 	private const float BallGravity = 1960f;   // ball gravity_scale 2 * ~980
@@ -79,6 +80,7 @@ public class AiController
 				_jumpTimingError = 0.18f;
 				_standOffset = 90f;
 				_perkStrength = 0f;
+				_kickSkill = 0.45f;
 				break;
 
 			case GameState.AiDifficulty.Intermediate:
@@ -92,6 +94,7 @@ public class AiController
 				_jumpTimingError = 0.02f;
 				_standOffset = 60f;
 				_perkStrength = 1.0f;
+				_kickSkill = 1.0f;
 				break;
 
 			default: // Normal
@@ -105,11 +108,12 @@ public class AiController
 				_jumpTimingError = 0.08f;
 				_standOffset = 72f;
 				_perkStrength = 0.5f;
+				_kickSkill = 0.85f;
 				break;
 		}
 	}
 
-	public (float axis, bool jump) Think(in AiContext ctx)
+	public (float axis, bool jump, bool kick) Think(in AiContext ctx)
 	{
 		float dt = (float)ctx.Delta;
 		_perceptionTimer -= dt;
@@ -170,8 +174,31 @@ public class AiController
 		axis = Mathf.Clamp(axis, -_speedFactor, _speedFactor);
 
 		bool jump = DecideJump(in ctx);
+		bool kick = DecideKick(in ctx);
 
-		return (axis, jump);
+		return (axis, jump, kick);
+	}
+
+	// Request a leg-kick when the ball is within reach and on the goal-ward side of the AI, so the
+	// kick drives it upfield. The owning PlayerController enforces the real cooldown; _kickSkill
+	// scales reach and reliability so weaker AIs kick less.
+	private bool DecideKick(in AiContext ctx)
+	{
+		if (_kickSkill <= 0f)
+			return false;
+
+		Vector2 toBall = ctx.BallPos - ctx.SelfPos;
+		float range = 120f + 90f * _kickSkill;
+		if (Mathf.Abs(toBall.X) > range || Mathf.Abs(toBall.Y) > 200f)
+			return false;
+
+		// Only kick when the ball is between the AI and the goal it attacks (or right on top of it),
+		// so a forward swing sends it toward the target rather than back toward its own net.
+		float toGoal = Mathf.Sign(ctx.TargetGoal.X - ctx.SelfPos.X);
+		if (Mathf.Abs(toBall.X) > 30f && Mathf.Sign(toBall.X) != toGoal)
+			return false;
+
+		return _rng.Randf() < _kickSkill;
 	}
 
 	private AiState DecideState(in AiContext ctx)

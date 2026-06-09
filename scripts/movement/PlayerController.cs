@@ -12,6 +12,15 @@ public partial class PlayerController : CharacterBody2D
 	[Export] public string LeftAction = "Player1_Left";
 	[Export] public string RightAction = "Player1_Right";
 	[Export] public string JumpAction = "Player1_Jump";
+	[Export] public string KickAction = "Player1_Kick";
+
+	// Leg kick: a swing of the foot that launches the ball harder than a passive body touch.
+	// While the swing is "active" the contact impulse is multiplied by KickBoost.
+	[Export] public float KickBoost = 1.9f;
+	[Export] public float KickActiveSeconds = 0.18f;   // window during which a touch counts as a real kick
+	[Export] public float KickCooldownSeconds = 0.45f; // can't spam-kick
+	[Export] public float KickSwingDegrees = 100f;     // how far the leg swings forward
+	[Export] public float KickSwingSeconds = 0.16f;    // forward-swing duration (return is the same)
 
 	[Export] public float MinX = 50f;
 	[Export] public float MaxX = 2250f;
@@ -28,8 +37,8 @@ public partial class PlayerController : CharacterBody2D
 	[Export] public float MinPushSpeed = 5f;         // ignore pushes slower than this
 	[Export] public float PushResponsiveness = 0.8f; // how quickly the ball matches the push speed (0..1)
 
-	[Export] public Color Player1BodyColor = new Color(0.20f, 0.45f, 0.95f, 1.0f);
-	[Export] public Color Player2BodyColor = new Color(0.90f, 0.22f, 0.22f, 1.0f);
+	// Body / kit colour now comes from the chosen club (see ClubDatabase); only the avatar
+	// dimensions and outline remain tunable here.
 	[Export] public Color OutlineColor = new Color(0f, 0f, 0f, 1f);
 	[Export] public int PlaceholderWidth = 192;
 	[Export] public int PlaceholderHeight = 256;
@@ -43,6 +52,13 @@ public partial class PlayerController : CharacterBody2D
 
 	private bool _wasOnFloor;
 	private RigidBody2D _ballInContact;
+
+	// Leg-kick runtime state.
+	private float _kickActiveLeft;     // > 0 while a swing counts as a real kick
+	private float _kickCooldownLeft;   // > 0 while a new kick is blocked
+	private int _facing = 1;           // +1 facing right, -1 facing left (drives the swing direction)
+	private Sprite2D _legSprite;
+	private Tween _legTween;
 
 	private GameState _gameState;
 	private int _playerIndex;
@@ -77,12 +93,44 @@ public partial class PlayerController : CharacterBody2D
 		_gameState = GetNodeOrNull<GameState>("/root/GameState");
 		_playerIndex = DetectPlayerIndex() - 1; // 0 = Player 1, 1 = Player 2
 
-		SetupPlaceholderSprite();
+		ApplyClubModifiers();
+		SetupPlayerSprite();
+		CreateLeg();
+	}
+
+	// Apply the chosen club's small, balanced stat modifiers to this player's movement and kick.
+	// Defaults (no GameState / no clubs) leave the tuned exports untouched.
+	private void ApplyClubModifiers()
+	{
+		if (_gameState == null)
+			return;
+
+		int clubIndex = _playerIndex == 1 ? _gameState.ClubTwoIndex : _gameState.ClubOneIndex;
+		ClubDatabase.Club club = ClubDatabase.GetClub(clubIndex);
+
+		Speed *= club.SpeedMultiplier;
+		JumpVelocity *= club.JumpMultiplier;     // JumpVelocity is negative; scaling magnitude still works
+		BaseKickSpeed *= club.KickMultiplier;
+		KickSpeedFactor *= club.KickMultiplier;
 	}
 
 	public override void _PhysicsProcess(double delta)
 	{
-		ReadControls(delta, out float moveAxis, out bool jumpPressed);
+		ReadControls(delta, out float moveAxis, out bool jumpPressed, out bool kickPressed);
+
+		_kickActiveLeft = Mathf.Max(0f, _kickActiveLeft - (float)delta);
+		_kickCooldownLeft = Mathf.Max(0f, _kickCooldownLeft - (float)delta);
+
+		// Face the way the player is moving so the kick swings forward.
+		if (InputEnabled && Mathf.Abs(moveAxis) > 0.1f)
+			_facing = moveAxis > 0f ? 1 : -1;
+
+		bool kickedThisFrame = false;
+		if (InputEnabled && kickPressed && _kickCooldownLeft <= 0f)
+		{
+			StartKick();
+			kickedThisFrame = true;
+		}
 
 		var v = Velocity;
 		v.X = InputEnabled ? moveAxis * Speed : 0f;
@@ -116,8 +164,10 @@ public partial class PlayerController : CharacterBody2D
 		}
 
 		// Pop the ball on fresh contact (the "kick"), then keep pushing it while in
-		// contact so the player can dribble/shove rather than the ball sticking.
-		if (touchedBall != null && touchedBall != _ballInContact)
+		// contact so the player can dribble/shove rather than the ball sticking. Pressing Kick
+		// while already overlapping the ball also fires a (boosted) impulse this frame.
+		bool freshContact = touchedBall != null && touchedBall != _ballInContact;
+		if (freshContact || (kickedThisFrame && touchedBall != null))
 			ApplyKickImpulse(touchedBall);
 
 		if (touchedBall != null)
@@ -146,7 +196,7 @@ public partial class PlayerController : CharacterBody2D
 	}
 
 	// Movement intent comes from the keyboard for a human, or from the AI brain otherwise.
-	private void ReadControls(double delta, out float moveAxis, out bool jumpPressed)
+	private void ReadControls(double delta, out float moveAxis, out bool jumpPressed, out bool kickPressed)
 	{
 		if (Control == ControlMode.Ai && _aiBrain != null && IsInstanceValid(_aiBall))
 		{
@@ -171,37 +221,73 @@ public partial class PlayerController : CharacterBody2D
 				ctx.PerkIsAdvantage = perkAdvantage;
 			}
 
-			(moveAxis, jumpPressed) = _aiBrain.Think(in ctx);
+			(moveAxis, jumpPressed, kickPressed) = _aiBrain.Think(in ctx);
 			return;
 		}
 
 		moveAxis = Input.GetAxis(LeftAction, RightAction);
 		jumpPressed = Input.IsActionJustPressed(JumpAction);
+		kickPressed = InputMap.HasAction(KickAction) && Input.IsActionJustPressed(KickAction);
 	}
 
 	private void ApplyKickImpulse(RigidBody2D ball)
 	{
 		Vector2 contactNormal = (ball.GlobalPosition - GlobalPosition).Normalized();
 		float playerSpeed = Velocity.Length();
+		bool kicking = _kickActiveLeft > 0f;
 
-		// Blend contact normal with player movement direction so fast runs send the ball forward
+		// Blend contact normal with player movement direction so fast runs send the ball forward.
+		// Mid-swing, bias the launch toward the facing direction so a timed kick "shoots" forward.
 		Vector2 dir = playerSpeed > 10f
 			? (contactNormal + Velocity.Normalized()).Normalized()
 			: contactNormal;
+		if (kicking)
+			dir = (contactNormal + new Vector2(_facing, -0.35f)).Normalized();
 
 		float ballAlong = ball.LinearVelocity.Dot(dir);
 		float playerInto = Mathf.Max(0f, Velocity.Dot(dir));  // player speed heading into the ball
 		float incoming = Mathf.Max(0f, -ballAlong);           // ball speed heading into the player
 
 		// Bouncier the faster the player moves: launch = baseline + reflected incoming
-		// speed (bounciness) + a share of the player's speed.
+		// speed (bounciness) + a share of the player's speed. A live leg-kick multiplies the
+		// result so a well-timed swing clearly out-powers a passive bump.
 		float targetOut = BaseKickSpeed + incoming * Bounciness + playerInto * KickSpeedFactor;
+		if (kicking)
+			targetOut *= KickBoost;
 		targetOut = Mathf.Min(targetOut, MaxBallSpeed);
 
 		float currentOut = Mathf.Max(0f, ballAlong);
 		float deltaV = targetOut - currentOut;
 		if (deltaV > 0f)
 			ball.ApplyCentralImpulse(dir * deltaV * ball.Mass);
+	}
+
+	// Start a leg swing: open the "real kick" window, set the cooldown and animate the foot.
+	private void StartKick()
+	{
+		_kickActiveLeft = KickActiveSeconds;
+		_kickCooldownLeft = KickCooldownSeconds;
+		AnimateLegSwing();
+	}
+
+	private void AnimateLegSwing()
+	{
+		if (_legSprite == null)
+			return;
+
+		if (_legTween != null && _legTween.IsValid())
+			_legTween.Kill();
+
+		// The leg hangs down at rest; a swing rotates it forward (toward facing) and back.
+		_legSprite.Scale = new Vector2(_facing, 1f);
+		float swing = Mathf.DegToRad(KickSwingDegrees) * _facing;
+
+		_legSprite.Rotation = 0f;
+		_legTween = CreateTween();
+		_legTween.TweenProperty(_legSprite, "rotation", swing, KickSwingSeconds)
+			.SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
+		_legTween.TweenProperty(_legSprite, "rotation", 0f, KickSwingSeconds)
+			.SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
 	}
 
 	// While the player overlaps the ball and moves into it, bring the ball's speed
@@ -226,7 +312,7 @@ public partial class PlayerController : CharacterBody2D
 		ball.ApplyCentralImpulse(dir * deltaV * ball.Mass * PushResponsiveness);
 	}
 
-	private void SetupPlaceholderSprite()
+	private void SetupPlayerSprite()
 	{
 		var sprite = GetNodeOrNull<Sprite2D>("Sprite2D");
 		if (sprite == null)
@@ -246,20 +332,72 @@ public partial class PlayerController : CharacterBody2D
 
 		int playerIndex = DetectPlayerIndex();
 
-		Color bodyColor = playerIndex == 2 ? Player2BodyColor : Player1BodyColor;
-		Color accentColor = playerIndex == 2
-			? new Color(1.0f, 0.93f, 0.20f, 1.0f)
-			: Colors.White;
+		// Use the club + player chosen on the selection screen; fall back to the first club/player
+		// when there is no GameState (e.g. running the match scene on its own).
+		int clubIndex = 0;
+		int variantIndex = 0;
+		if (_gameState != null)
+		{
+			clubIndex = playerIndex == 2 ? _gameState.ClubTwoIndex : _gameState.ClubOneIndex;
+			variantIndex = playerIndex == 2 ? _gameState.PlayerTwoVariant : _gameState.PlayerOneVariant;
+		}
 
-		sprite.Texture = BuildPlaceholderTexture(
+		ClubDatabase.Club club = ClubDatabase.GetClub(clubIndex);
+		ClubDatabase.PlayerVariant variant = ClubDatabase.GetPlayer(clubIndex, variantIndex);
+
+		sprite.Texture = PlayerSpriteFactory.BuildPlayerTexture(
 			Math.Max(PlaceholderWidth, 48),
 			Math.Max(PlaceholderHeight, 64),
 			playerIndex,
-			bodyColor,
-			accentColor,
+			club,
+			variant,
 			OutlineColor,
 			Math.Max(OutlineThickness, 2)
 		);
+	}
+
+	// Build the swinging leg as a child Sprite2D pivoted at the hip so a swing rotates the foot
+	// forward. Sits low on the body, behind the main sprite.
+	private void CreateLeg()
+	{
+		GetNodeOrNull<Sprite2D>("Leg")?.QueueFree();
+
+		int legLength = Math.Max(40, PlaceholderHeight / 4);
+		int legWidth = Math.Max(14, PlaceholderWidth / 12);
+
+		_legSprite = new Sprite2D
+		{
+			Name = "Leg",
+			Texture = BuildLegTexture(legWidth, legLength),
+			Centered = false,
+			// Pivot at the top of the bar (the hip): origin sits at the sprite's top-centre.
+			Offset = new Vector2(-legWidth / 2f, 0f),
+			Position = new Vector2(0f, PlaceholderHeight * 0.18f),
+			ZIndex = 9 // just behind the body sprite (ZIndex 10)
+		};
+		AddChild(_legSprite);
+	}
+
+	private Texture2D BuildLegTexture(int width, int length)
+	{
+		Color legColor = new Color(0.96f, 0.85f, 0.70f); // generic skin-tone limb
+		Color bootColor = new Color(0.12f, 0.12f, 0.14f);
+		Color outline = OutlineColor;
+
+		Image image = Image.CreateEmpty(width, length, false, Image.Format.Rgba8);
+		image.Fill(Colors.Transparent);
+
+		for (int y = 0; y < length; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+				bool edge = x == 0 || x == width - 1 || y == 0 || y == length - 1;
+				Color c = edge ? outline : (y > length * 0.74f ? bootColor : legColor);
+				image.SetPixel(x, y, c);
+			}
+		}
+
+		return ImageTexture.CreateFromImage(image);
 	}
 
 	private int DetectPlayerIndex()
@@ -272,124 +410,4 @@ public partial class PlayerController : CharacterBody2D
 		return 1;
 	}
 
-	private Texture2D BuildPlaceholderTexture(
-		int width,
-		int height,
-		int playerIndex,
-		Color bodyColor,
-		Color accentColor,
-		Color outlineColor,
-		int outline)
-	{
-		Image image = Image.CreateEmpty(width, height, false, Image.Format.Rgba8);
-		image.Fill(Colors.Transparent);
-
-		Color headColor = LightenColor(bodyColor, 0.18f);
-		Color shortsColor = DarkenColor(bodyColor, 0.25f);
-
-		int torsoX = width / 2 - width / 5;
-		int torsoY = height / 3;
-		int torsoW = width / 5 * 2;
-		int torsoH = height / 3;
-
-		int legW = width / 7;
-		int legH = height / 5;
-		int leftLegX = width / 2 - legW - width / 18;
-		int rightLegX = width / 2 + width / 18;
-		int legY = torsoY + torsoH - outline;
-
-		int armW = width / 10;
-		int armH = height / 4;
-		int leftArmX = torsoX - armW + outline;
-		int rightArmX = torsoX + torsoW - outline;
-		int armY = torsoY + height / 18;
-
-		Vector2 headCenter = new Vector2(width / 2.0f, height * 0.20f);
-		float headRadius = width * 0.17f;
-
-		DrawFilledCircle(image, headCenter, headRadius + outline, outlineColor);
-		DrawFilledCircle(image, headCenter, headRadius, headColor);
-
-		DrawRect(image, leftArmX - outline, armY - outline, armW + outline * 2, armH + outline * 2, outlineColor);
-		DrawRect(image, rightArmX - outline, armY - outline, armW + outline * 2, armH + outline * 2, outlineColor);
-		DrawRect(image, leftArmX, armY, armW, armH, bodyColor);
-		DrawRect(image, rightArmX, armY, armW, armH, bodyColor);
-
-		DrawRect(image, torsoX - outline, torsoY - outline, torsoW + outline * 2, torsoH + outline * 2, outlineColor);
-		DrawRect(image, torsoX, torsoY, torsoW, torsoH, bodyColor);
-
-		DrawRect(image, torsoX, torsoY + torsoH - height / 12, torsoW, height / 12, shortsColor);
-
-		if (playerIndex == 1)
-		{
-			int stripeH = Math.Max(6, height / 16);
-			DrawRect(image, torsoX + outline, torsoY + torsoH / 4, torsoW - outline * 2, stripeH, accentColor);
-		}
-		else
-		{
-			int stripeW = Math.Max(6, width / 10);
-			DrawRect(image, width / 2 - stripeW / 2, torsoY + outline, stripeW, torsoH - outline * 2, accentColor);
-		}
-
-		DrawRect(image, leftLegX - outline, legY - outline, legW + outline * 2, legH + outline * 2, outlineColor);
-		DrawRect(image, rightLegX - outline, legY - outline, legW + outline * 2, legH + outline * 2, outlineColor);
-		DrawRect(image, leftLegX, legY, legW, legH, shortsColor);
-		DrawRect(image, rightLegX, legY, legW, legH, shortsColor);
-
-		return ImageTexture.CreateFromImage(image);
-	}
-
-	private void DrawRect(Image image, int x, int y, int width, int height, Color color)
-	{
-		int startX = Math.Max(0, x);
-		int startY = Math.Max(0, y);
-		int endX = Math.Min(image.GetWidth(), x + width);
-		int endY = Math.Min(image.GetHeight(), y + height);
-
-		for (int py = startY; py < endY; py++)
-		{
-			for (int px = startX; px < endX; px++)
-			{
-				image.SetPixel(px, py, color);
-			}
-		}
-	}
-
-	private void DrawFilledCircle(Image image, Vector2 center, float radius, Color color)
-	{
-		int minX = Math.Max(0, Mathf.FloorToInt(center.X - radius));
-		int maxX = Math.Min(image.GetWidth() - 1, Mathf.CeilToInt(center.X + radius));
-		int minY = Math.Max(0, Mathf.FloorToInt(center.Y - radius));
-		int maxY = Math.Min(image.GetHeight() - 1, Mathf.CeilToInt(center.Y + radius));
-
-		for (int y = minY; y <= maxY; y++)
-		{
-			for (int x = minX; x <= maxX; x++)
-			{
-				Vector2 p = new Vector2(x, y);
-				if (p.DistanceTo(center) <= radius)
-					image.SetPixel(x, y, color);
-			}
-		}
-	}
-
-	private Color LightenColor(Color color, float amount)
-	{
-		return new Color(
-			Mathf.Lerp(color.R, 1.0f, amount),
-			Mathf.Lerp(color.G, 1.0f, amount),
-			Mathf.Lerp(color.B, 1.0f, amount),
-			color.A
-		);
-	}
-
-	private Color DarkenColor(Color color, float amount)
-	{
-		return new Color(
-			color.R * (1.0f - amount),
-			color.G * (1.0f - amount),
-			color.B * (1.0f - amount),
-			color.A
-		);
-	}
 }
