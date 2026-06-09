@@ -1,16 +1,12 @@
 using Godot;
 
-// Static catalogue for the "Create Clubs" feature. A Club is a cosmetic team identity - a name,
-// an emblem (drawn procedurally from its two colours) and exactly 3 selectable human-head player
-// avatars - plus small, balanced stat modifiers so clubs feel a little different to play without
-// any of them being strictly best. The avatars themselves are generated in code (the same approach
-// as the original code-drawn placeholder) so the feature ships without binary art assets.
+// Static catalogue of selectable clubs. Each club maps to a real European side and carries
+// its authentic colours, a CrestPath pointing to an SVG asset, three player variants with
+// club-themed names/looks, and small balanced stat modifiers.
 public static class ClubDatabase
 {
 	public const int PlayersPerClub = 3;
 
-	// One selectable human head. Only the face (skin) and hair colour change between a club's three
-	// players; the kit/body colour always comes from the club so a side reads as one team.
 	public readonly struct PlayerVariant
 	{
 		public readonly string Name;
@@ -28,23 +24,23 @@ public static class ClubDatabase
 	public readonly struct Club
 	{
 		public readonly string Name;
-		public readonly Color PrimaryColor;   // kit / body colour and emblem base
-		public readonly Color AccentColor;    // shirt stripe and emblem detail
+		public readonly Color PrimaryColor;
+		public readonly Color AccentColor;
+		public readonly string CrestPath; // res:// path to SVG crest asset (loaded after editor import)
 
-		// Stat modifiers are multipliers centred on 1.0 and kept inside a narrow band so no club
-		// dominates: each is a little better at one thing and a little worse at another.
 		public readonly float SpeedMultiplier;
 		public readonly float JumpMultiplier;
 		public readonly float KickMultiplier;
 
 		public readonly PlayerVariant[] Players;
 
-		public Club(string name, Color primary, Color accent,
+		public Club(string name, Color primary, Color accent, string crestPath,
 			float speed, float jump, float kick, PlayerVariant[] players)
 		{
 			Name = name;
 			PrimaryColor = primary;
 			AccentColor = accent;
+			CrestPath = crestPath;
 			SpeedMultiplier = speed;
 			JumpMultiplier = jump;
 			KickMultiplier = kick;
@@ -52,42 +48,86 @@ public static class ClubDatabase
 		}
 	}
 
-	// Shared human skin / hair tones reused across clubs so the three avatars per club stay
-	// visually distinct from one another.
-	private static readonly Color SkinLight = new Color(0.99f, 0.83f, 0.69f);
-	private static readonly Color SkinMid = new Color(0.85f, 0.63f, 0.45f);
-	private static readonly Color SkinDark = new Color(0.55f, 0.38f, 0.26f);
+	private static readonly Color SkinLight  = new Color(0.99f, 0.83f, 0.69f);
+	private static readonly Color SkinMid    = new Color(0.85f, 0.63f, 0.45f);
+	private static readonly Color SkinDark   = new Color(0.55f, 0.38f, 0.26f);
 
-	private static readonly Color HairBlack = new Color(0.12f, 0.10f, 0.10f);
-	private static readonly Color HairBrown = new Color(0.36f, 0.22f, 0.12f);
-	private static readonly Color HairBlond = new Color(0.93f, 0.80f, 0.36f);
-
-	private static PlayerVariant[] HumanHeads()
-	{
-		return new[]
-		{
-			new PlayerVariant("Striker", SkinLight, HairBrown),
-			new PlayerVariant("Captain", SkinMid, HairBlack),
-			new PlayerVariant("Winger", SkinDark, HairBlond),
-		};
-	}
+	private static readonly Color HairBlack  = new Color(0.10f, 0.08f, 0.08f);
+	private static readonly Color HairBrown  = new Color(0.36f, 0.22f, 0.12f);
+	private static readonly Color HairBlond  = new Color(0.93f, 0.80f, 0.36f);
+	private static readonly Color HairGinger = new Color(0.80f, 0.40f, 0.10f);
 
 	public static readonly Club[] Clubs =
 	{
-		new Club("Falcons", Palette.FromHex("#2F6FE0"), Palette.FromHex("#FFD23F"),
-			speed: 1.10f, jump: 1.00f, kick: 0.94f, HumanHeads()),
+		// Real Madrid — white/gold, speed-focused
+		new Club(
+			"Real Madrid",
+			Palette.FromHex("#FFFFFF"), Palette.FromHex("#F7D300"),
+			"res://Assets/Clubs/real_madrid.svg",
+			speed: 1.08f, jump: 1.00f, kick: 0.96f,
+			new[]
+			{
+				new PlayerVariant("Bellingham", SkinLight, HairBrown),
+				new PlayerVariant("Vinicius",   SkinDark,  HairBlack),
+				new PlayerVariant("Modric",     SkinLight, HairBlack),
+			}
+		),
 
-		new Club("Bulls", Palette.FromHex("#C0392B"), Palette.FromHex("#F2F2F2"),
-			speed: 0.95f, jump: 1.00f, kick: 1.12f, HumanHeads()),
+		// Arsenal — red/white, powerful kick
+		new Club(
+			"Arsenal",
+			Palette.FromHex("#EF0107"), Palette.FromHex("#FFFFFF"),
+			"res://Assets/Clubs/arsenal.svg",
+			speed: 0.97f, jump: 1.02f, kick: 1.10f,
+			new[]
+			{
+				new PlayerVariant("Saka",       SkinDark,  HairBlack),
+				new PlayerVariant("Havertz",    SkinLight, HairBlond),
+				new PlayerVariant("Martinelli", SkinDark,  HairBlack),
+			}
+		),
 
-		new Club("Sharks", Palette.FromHex("#1ABC9C"), Palette.FromHex("#0B3D33"),
-			speed: 1.00f, jump: 1.10f, kick: 0.96f, HumanHeads()),
+		// Man City — sky blue/white, high jump
+		new Club(
+			"Man City",
+			Palette.FromHex("#6CABDD"), Palette.FromHex("#FFFFFF"),
+			"res://Assets/Clubs/man_city.svg",
+			speed: 1.00f, jump: 1.12f, kick: 0.94f,
+			new[]
+			{
+				new PlayerVariant("Haaland",   SkinLight, HairBlond),
+				new PlayerVariant("De Bruyne", SkinLight, HairGinger),
+				new PlayerVariant("Doku",      SkinDark,  HairBlack),
+			}
+		),
 
-		new Club("Dragons", Palette.FromHex("#8E44AD"), Palette.FromHex("#FFC857"),
-			speed: 1.05f, jump: 1.05f, kick: 0.93f, HumanHeads()),
+		// Juventus — black/white, solid kick power
+		new Club(
+			"Juventus",
+			Palette.FromHex("#000000"), Palette.FromHex("#FFFFFF"),
+			"res://Assets/Clubs/juventus.svg",
+			speed: 1.00f, jump: 1.00f, kick: 1.08f,
+			new[]
+			{
+				new PlayerVariant("Vlahovic", SkinMid,  HairBlack),
+				new PlayerVariant("Yildiz",   SkinMid,  HairBlack),
+				new PlayerVariant("Bremer",   SkinDark, HairBlack),
+			}
+		),
 
-		new Club("Wolves", Palette.FromHex("#5D6D7E"), Palette.FromHex("#E74C3C"),
-			speed: 0.97f, jump: 0.98f, kick: 1.08f, HumanHeads()),
+		// Liverpool — red/gold, explosive pace
+		new Club(
+			"Liverpool",
+			Palette.FromHex("#C8102E"), Palette.FromHex("#F6EB61"),
+			"res://Assets/Clubs/liverpool.svg",
+			speed: 1.10f, jump: 0.96f, kick: 1.00f,
+			new[]
+			{
+				new PlayerVariant("Salah",             SkinMid,   HairBlack),
+				new PlayerVariant("Nunez",             SkinMid,   HairBlack),
+				new PlayerVariant("Alexander-Arnold",  SkinLight, HairBlond),
+			}
+		),
 	};
 
 	public static int ClubCount => Clubs.Length;

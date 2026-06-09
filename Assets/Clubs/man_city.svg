@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <clipPath id="mc_clip"><circle cx="100" cy="100" r="90"/></clipPath>
+  </defs>
+  <!-- Outer navy border -->
+  <circle cx="100" cy="100" r="98" fill="#1C2C5B"/>
+  <!-- Sky blue field -->
+  <circle cx="100" cy="100" r="90" fill="#6CABDD"/>
+  <!-- White inner ring -->
+  <circle cx="100" cy="100" r="78" fill="#FFFFFF"/>
+  <!-- Shield shape -->
+  <path d="M100,28 L140,50 L140,110 Q140,145 100,165 Q60,145 60,110 L60,50 Z" fill="#6CABDD"/>
+  <!-- Ship / rose (simplified as eagle wings) -->
+  <!-- Eagle body -->
+  <ellipse cx="100" cy="100" rx="14" ry="20" fill="#1C2C5B"/>
+  <!-- Left wing -->
+  <path d="M86,92 Q58,78 52,96 Q70,90 86,106 Z" fill="#1C2C5B"/>
+  <!-- Right wing -->
+  <path d="M114,92 Q142,78 148,96 Q130,90 114,106 Z" fill="#1C2C5B"/>
+  <!-- Eagle head -->
+  <circle cx="100" cy="78" r="11" fill="#1C2C5B"/>
+  <!-- Beak -->
+  <polygon points="108,77 118,80 108,84" fill="#F7D300"/>
+  <!-- Eye -->
+  <circle cx="104" cy="76" r="3" fill="#FFFFFF"/>
+  <!-- Three stars at top -->
+  <text x="100" y="56" text-anchor="middle" font-size="14" fill="#F7D300">&#9733; &#9733; &#9733;</text>
+  <!-- Shield bottom label -->
+  <rect x="65" y="138" width="70" height="20" rx="3" fill="#1C2C5B"/>
+  <text x="100" y="152" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="10" fill="#FFFFFF">MAN CITY</text>
+</svg>

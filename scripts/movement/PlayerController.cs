@@ -379,7 +379,7 @@ public partial class PlayerController : CharacterBody2D
 			// Pivot at the top of the bar (the hip): origin sits at the sprite's top-centre.
 			Offset = new Vector2(-legWidth / 2f, 0f),
 			Position = new Vector2(0f, PlaceholderHeight * 0.18f),
-			ZIndex = 9 // just behind the body sprite (ZIndex 10)
+			ZIndex = 11 // in front of the body sprite (ZIndex 10) so the kick is visible
 		};
 		AddChild(_legSprite);
 	}
